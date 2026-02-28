@@ -84,22 +84,22 @@ class Key:
 def step(direction, target):
     """
     Performs one movement step in the given DIRECTION towards TARGET.
-    Teleport class: no double jump; use Rope Lift for up, Teleport (C) for movement.
-    Optional jump for vertical, then teleport. Direction is held by Move.
+    For up: Rope Lift only (no up+jump). 1.5s sleep for regular, 3s for very high.
+    For down: optional jump, then teleport. For left/right: teleport.
     """
-    num_presses = 2
-    if direction == 'up' or direction == 'down':
-        num_presses = 1
     if direction == 'up':
         press(Key.ROPE_LIFT, 1)
-    if config.stage_fright and direction != 'up' and utils.bernoulli(0.75):
+        d_y = target[1] - config.player_pos[1]
+        time.sleep(3.0 if abs(d_y) > 0.08 else 1.5)
+        return
+    num_presses = 2
+    if direction == 'down':
+        num_presses = 1
+    if config.stage_fright and utils.bernoulli(0.75):
         time.sleep(utils.rand_float(0.1, 0.3))
     d_y = target[1] - config.player_pos[1]
-    if abs(d_y) > settings.move_tolerance * 1.5:
-        if direction == 'down':
-            press(Key.JUMP, 3)
-        elif direction == 'up':
-            press(Key.JUMP, 1)
+    if abs(d_y) > settings.move_tolerance * 1.5 and direction == 'down':
+        press(Key.JUMP, 3)
     press(Key.TELEPORT, num_presses)
 
 
@@ -165,21 +165,23 @@ class Teleport(Command):
         self.jump = settings.validate_boolean(jump)
 
     def main(self):
+        if self.direction == 'up':
+            press(Key.ROPE_LIFT, 1)
+            time.sleep(1.5)
+            if settings.record_layout:
+                config.layout.add(*config.player_pos)
+            return
         num_presses = 3
         time.sleep(0.05)
-        if self.direction in ['up', 'down']:
+        if self.direction == 'down':
             num_presses = 2
-        if self.direction != 'up':
-            key_down(self.direction)
-            time.sleep(0.05)
+        key_down(self.direction)
+        time.sleep(0.05)
         if self.jump:
             if self.direction == 'down':
                 press(Key.JUMP, 3, down_time=0.1)
             else:
                 press(Key.JUMP, 1)
-        if self.direction == 'up':
-            key_down(self.direction)
-            time.sleep(0.05)
         press(Key.TELEPORT, num_presses)
         key_up(self.direction)
         if settings.record_layout:

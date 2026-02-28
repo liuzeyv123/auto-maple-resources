@@ -63,23 +63,22 @@ class Key:
 def step(direction, target):
     """
     Performs one movement step in the given DIRECTION towards TARGET.
-    Fluid triple jump (Phantom can triple jump): optional vertical jump, then 3 presses of
-    JUMP (space) for left/right, 2 for up/down. When direction is up, presses Rope Lift once.
-    No Shroud Walk in step() so movement stays consistent like Ren. Direction is held by Move.
+    For up: Rope Lift only (no up+jump). 1.5s sleep for regular, 3s for very high.
+    For down: optional triple jump, then double jump. For left/right: triple jump.
     """
-    num_presses = 3   # triple jump for horizontal
-    if direction == 'up' or direction == 'down':
-        num_presses = 2   # double jump for vertical
     if direction == 'up':
         press(Key.ROPE_LIFT, 1)
-    if config.stage_fright and direction != 'up' and utils.bernoulli(0.75):
+        d_y = target[1] - config.player_pos[1]
+        time.sleep(3.0 if abs(d_y) > 0.08 else 1.5)
+        return
+    num_presses = 3
+    if direction == 'down':
+        num_presses = 2
+    if config.stage_fright and utils.bernoulli(0.75):
         time.sleep(utils.rand_float(0.1, 0.3))
     d_y = target[1] - config.player_pos[1]
-    if abs(d_y) > settings.move_tolerance * 1.5:
-        if direction == 'down':
-            press(Key.JUMP, 3)
-        elif direction == 'up':
-            press(Key.JUMP, 2)
+    if abs(d_y) > settings.move_tolerance * 1.5 and direction == 'down':
+        press(Key.JUMP, 3)
     press(Key.JUMP, num_presses)
 
 
@@ -137,13 +136,17 @@ class Adjust(Command):
 
 
 class FlashJump(Command):
-    """Performs a flash jump in the given direction (JUMP key, 2 presses)."""
+    """Performs a flash jump in the given direction (JUMP key, 2 presses). For up: Rope Lift only."""
 
     def __init__(self, direction):
         super().__init__(locals())
         self.direction = settings.validate_arrows(direction)
 
     def main(self):
+        if self.direction == 'up':
+            press(Key.ROPE_LIFT, 1)
+            time.sleep(1.5)
+            return
         key_down(self.direction)
         time.sleep(0.1)
         press(Key.JUMP, 2)
