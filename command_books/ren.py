@@ -6,19 +6,19 @@ import math
 from src.routine.components import Command
 from src.common.vkeys import press, key_down, key_up
 
-# Cooldowns for SkillRotation (key -> sec). 0 = no cooldown (spam).
+# Cooldowns for SkillRotation (Key attribute name -> sec). 0 = no cooldown (spam).
+# Uses Key attribute names so user rebinds are respected.
 SKILL_COOLDOWNS = {
-    'ctrl': 0,       # Plum Blossom Sword (hold left/right and spam)
-    'shift': 17,     # Spirit Sword: 5 presses to trigger, then 17 sec cd
-    '4': 60,         # Erda Shower 60 sec (shared)
-    '5': 250,        # True Arachnid Reflection 250 sec (shared)
-    '1': 120,        # Thousand Blossom Flurry 120 sec
-    '2': 120,        # Soul Immeasurable 120 sec
-    '3': 120,        # Dancing Annihilation 120 sec
+    'PLUM_BLOSSOM_SWORD': 0,
+    'SPIRIT_SWORD': 17,     # 5 presses to trigger, then 17 sec cd
+    'ERDA_SHOWER': 60,
+    'TRUE_ARACHNID_REFLECTION': 250,
+    'THOUSAND_BLOSSOM_FLURRY': 120,
+    'SOUL_IMMEASURABLE': 120,
+    'DANCING_ANNIHILATION': 120,
 }
-# Keys that need multiple presses when used in rotation (e.g. Spirit Sword = 5)
 SKILL_PRESS_COUNTS = {
-    'shift': 5,
+    'SPIRIT_SWORD': 5,
 }
 
 

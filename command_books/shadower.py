@@ -6,14 +6,14 @@ import math
 from src.routine.components import Command
 from src.common.vkeys import press, key_down, key_up
 
-# Cooldowns for SkillRotation (key -> sec; meso explosion fake 10s so it's not spammed)
+# Cooldowns for SkillRotation (Key attribute name -> sec). Uses Key names so rebinds work.
 SKILL_COOLDOWNS = {
-    'ctrl': 0,    # Cruel Stab (primary)
-    'shift': 10,  # Meso Explosion (fake 10s - costs mesos)
-    'q': 60,      # Dark Flare
-    'w': 30,      # Sudden Raid
-    'e': 120,     # Smokescreen
-    'r': 60,      # Shadow Veil
+    'CRUEL_STAB': 0,
+    'MESO_EXPLOSION': 10,   # fake 10s - costs mesos
+    'DARK_FLARE': 60,
+    'SUDDEN_RAID': 30,
+    'SMOKESCREEN': 120,
+    'SHADOW_VEIL': 60,
 }
 
 

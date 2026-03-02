@@ -6,30 +6,31 @@ import math
 from src.routine.components import Command
 from src.common.vkeys import press, key_down, key_up
 
-# Cooldowns for SkillRotation (key -> sec). 0 = no cooldown (spam).
+# Cooldowns for SkillRotation (Key attribute name -> sec). 0 = no cooldown (spam).
+# Uses Key attribute names so user rebinds are respected.
 SKILL_COOLDOWNS = {
-    'ctrl': 0,         # Soul-Shatter Talisman (no cd)
-    'shift': 12,       # Spinning Strike 12 sec
-    'a': 30,           # Pulverizing Strike 30 sec
-    's': 30,           # Execute 30 sec
-    'd': 30,           # Shade Fletched Arrow 30 sec
-    'f': 30,           # Heart Wreck Talisman 30 sec
-    'q': 60,           # Summon Tengu 60 sec
-    'w': 60,           # Summon Oni 60 sec
-    't': 60,           # Barrier Curse Ward 60 sec
-    '4': 60,           # Erda Shower (shared) 60 sec
-    'home': 60,        # Call of Unit 60 sec
-    'e': 120,          # Summon Orochi 120 sec
-    'r': 120,          # Unleash Radiant Flame 120 sec
-    'v': 120,          # Unleash Black Winged Destruction 120 sec
-    'h': 120,          # Unleash Soul-Searing Venom 120 sec
-    '1': 120,          # Twilight Bloom 120 sec
-    '2': 120,          # Princess Sakuno's Blessing 120 sec
-    '3': 120,          # Hakumenkonmou Juubi 120 sec
-    'page up': 120,    # Spirit Chains 120 sec
-    'page down': 120,  # True Name Revolution 120 sec
-    'end': 120,        # Akatsuki Blessing 120 sec
-    '5': 250,          # True Arachnid Reflection (shared) 250 sec
+    'SOUL_SHATTER_TALISMAN': 0,
+    'SPINNING_STRIKE': 12,
+    'PULVERIZING_STRIKE': 30,
+    'EXECUTE': 30,
+    'SHADE_FLETCHED_ARROW': 30,
+    'HEART_WRECK_TALISMAN': 30,
+    'SUMMON_TENGU': 60,
+    'SUMMON_ONI': 60,
+    'BARRIER_CURSE_WARD': 60,
+    'ERDA_SHOWER': 60,
+    'CALL_OF_UNIT': 60,
+    'SUMMON_OROCHI': 120,
+    'UNLEASH_RADIANT_FLAME': 120,
+    'UNLEASH_BLACK_WINGED_DESTRUCTION': 120,
+    'UNLEASH_SOUL_SEARING_VENOM': 120,
+    'TWILIGHT_BLOOM': 120,
+    'PRINCESS_SAKUNO_BLESSING': 120,
+    'HAKUMENKONMOU_JUUBI': 120,
+    'SPIRIT_CHAINS': 120,
+    'TRUE_NAME_REVOLUTION': 120,
+    'AKATSUKI_BLESSING': 120,
+    'TRUE_ARACHNID_REFLECTION': 250,
 }
 
 

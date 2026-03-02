@@ -6,18 +6,19 @@ import math
 from src.routine.components import Command
 from src.common.vkeys import press, key_down, key_up
 
-# Cooldowns for SkillRotation (key -> sec). 0 = no cooldown (spam).
+# Cooldowns for SkillRotation (Key attribute name -> sec). 0 = no cooldown (spam).
+# Uses Key attribute names so user rebinds are respected.
 SKILL_COOLDOWNS = {
-    'ctrl': 0,     # Cleave (primary attack)
-    'x': 1.5,      # Plummet (use in air; jump first)
-    'shift': 20,   # Aether Bloom
-    'q': 30,       # Reign of Destruction
-    'w': 12,       # Noble Summons
-    'e': 0.5,      # Hunting Decree
-    '1': 120,      # Blade Torrent
-    '2': 120,      # Shardbreaker
-    '4': 60,       # Erda Shower (shared)
-    '5': 250,      # True Arachnid Reflection (shared)
+    'CLEAVE': 0,
+    'PLUMMET': 1.5,
+    'AETHER_BLOOM': 20,
+    'REIGN_OF_DESTRUCTION': 30,
+    'NOBLE_SUMMONS': 12,
+    'HUNTING_DECREE': 0.5,
+    'BLADE_TORRENT': 120,
+    'SHARDBREAKER': 120,
+    'ERDA_SHOWER': 60,
+    'TRUE_ARACHNID_REFLECTION': 250,
 }
 
 
