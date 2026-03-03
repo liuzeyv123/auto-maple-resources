@@ -6,6 +6,9 @@ import math
 from src.routine.components import Command
 from src.common.vkeys import press, key_down, key_up
 
+# 设置主攻模式tap或者hold
+MAIN_ATTACK_TYPE = 'hold' 
+
 # Cooldowns for SkillRotation (Key attribute name -> sec). 0 = no cooldown (spam).
 # Uses Key attribute names so user rebinds are respected.
 SKILL_COOLDOWNS = {
