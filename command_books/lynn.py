@@ -157,42 +157,86 @@ class Buff(Command):
 
 
 class FlashJump(Command):
-    """Performs a flash jump in the given direction (JUMP key, 2 presses). For up: Rope Lift only."""
+    """执行闪现跳跃到指定方向（使用JUMP键，按2次）。向上方向：仅使用绳索升降机。"""
 
     def __init__(self, direction):
+        """初始化FlashJump命令
+        
+        Args:
+            direction: 跳跃方向（上、下、左、右）
+        """
         super().__init__(locals())
+        # 验证并设置方向键
         self.direction = settings.validate_arrows(direction)
 
     def main(self):
+        """执行闪现跳跃
+        
+        执行流程：
+        1. 如果方向是向上，则使用绳索升降机
+        2. 否则，按下方向键，执行闪现跳跃，释放方向键
+        """
         if self.direction == 'up':
+            # 使用绳索升降机
             press(Key.ROPE_LIFT, 1)
             time.sleep(1.5)
             return
+        # 按下方向键
         key_down(self.direction)
         time.sleep(0.1)
+        # 执行闪现跳跃（按2次跳跃键）
         press(Key.JUMP, 2)
+        # 释放方向键
         key_up(self.direction)
         time.sleep(0.5)
 
 
 class Strike(Command):
-    """Attacks using Strike (ctrl) in a given direction. Primary attack, 0 cd."""
+    """使用Strike（ctrl）在指定方向攻击。主要攻击，无冷却时间。"""
 
     def __init__(self, direction, attacks=2, repetitions=1):
+        """初始化Strike命令
+        
+        Args:
+            direction: 攻击方向（水平方向箭头键）
+            attacks: 每次重复的攻击次数，默认为2
+            repetitions: 攻击重复次数，默认为1
+        """
         super().__init__(locals())
+        # 验证并设置方向键
         self.direction = settings.validate_horizontal_arrows(direction)
+        # 转换攻击次数为整数
         self.attacks = int(attacks)
+        # 转换重复次数为整数
         self.repetitions = int(repetitions)
 
     def main(self):
+        """执行Strike攻击
+        
+        执行流程：
+        1. 短暂延迟确保操作流畅
+        2. 按下方向键
+        3. 短暂延迟
+        4. 如果启用了stage_fright且有70%的概率，添加随机延迟以模拟人类操作
+        5. 按照指定的重复次数执行攻击
+        6. 释放方向键
+        7. 根据攻击次数添加不同的延迟以确保攻击完成
+        """
+        # 短暂延迟，确保操作流畅
         time.sleep(0.05)
+        # 按下方向键
         key_down(self.direction)
+        # 短暂延迟
         time.sleep(0.05)
+        # 如果启用了stage_fright且有70%的概率，添加随机延迟以模拟人类操作
         if config.stage_fright and utils.bernoulli(0.7):
             time.sleep(utils.rand_float(0.1, 0.3))
+        # 按照指定的重复次数执行攻击
         for _ in range(self.repetitions):
             press(Key.STRIKE, self.attacks, up_time=0.05)
+        # 释放方向键
         key_up(self.direction)
+        # 根据攻击次数添加不同的延迟以确保攻击完成
         if self.attacks > 2:
             time.sleep(0.3)
         else:

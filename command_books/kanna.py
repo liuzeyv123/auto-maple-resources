@@ -8,6 +8,10 @@ from src.common.vkeys import press, key_down, key_up
 
 # Cooldowns for SkillRotation (Key attribute name -> sec). 0 = no cooldown (spam).
 # Uses Key attribute names so user rebinds are respected.
+Jump_Attack_TYPE = False
+# 主攻模式选择，按住或者点按 hold or tap
+MAIN_ATTACK_TYPE = 'tap'
+
 SKILL_COOLDOWNS = {
     'SOUL_SHATTER_TALISMAN': 0,
     'SPINNING_STRIKE': 12,
@@ -31,6 +35,33 @@ SKILL_COOLDOWNS = {
     'TRUE_NAME_REVOLUTION': 120,
     'AKATSUKI_BLESSING': 120,
     'TRUE_ARACHNID_REFLECTION': 250,
+}
+
+# 技能按键次数配置
+SKILL_PRESS_COUNTS = {
+    'ERDA_SHOWER': 3,
+    'TRUE_ARACHNID_REFLECTION': 3,
+    'SUMMON_OROCHI': 3,
+    'UNLEASH_RADIANT_FLAME': 3,
+    'UNLEASH_BLACK_WINGED_DESTRUCTION': 3,
+    'UNLEASH_SOUL_SEARING_VENOM': 3,
+    'TWILIGHT_BLOOM': 3,
+    'PRINCESS_SAKUNO_BLESSING': 3,
+    'HAKUMENKONMOU_JUUBI': 3,
+    'SPIRIT_CHAINS': 3,
+    'TRUE_NAME_REVOLUTION': 3,
+    'AKATSUKI_BLESSING': 3,
+    'ORIGIN': 3,
+    'ASCENT': 3,
+    'BARRIER_CURSE_WARD': 2,
+    'SUMMON_TENGU': 2,
+    'SUMMON_ONI': 2,
+    'PULVERIZING_STRIKE': 2,
+    'EXECUTE': 2,
+    'SHADE_FLETCHED_ARROW': 2,
+    'HEART_WRECK_TALISMAN': 2,
+    'CALL_OF_UNIT': 2,
+    'SPINNING_STRIKE': 2,
 }
 
 
@@ -166,13 +197,20 @@ class Teleport(Command):
         self.jump = settings.validate_boolean(jump)
 
     def main(self):
+        # 处理向上移动的情况
         if self.direction == 'up':
+            # 使用绳索升降机技能
             press(Key.ROPE_LIFT, 1)
+            # 等待1.5秒，确保角色完成上升动作
             time.sleep(1.5)
+            # 如果启用了布局记录，将当前位置添加到布局中
             if settings.record_layout:
                 config.layout.add(*config.player_pos)
+            # 结束当前步骤
             return
+        # 非向上方向时，默认使用3次跳跃（闪现跳跃）
         num_presses = 3
+        # 短暂延迟，确保操作流畅
         time.sleep(0.05)
         if self.direction == 'down':
             num_presses = 2
@@ -229,20 +267,48 @@ class SoulShatterTalisman(Command):
     """Attacks using Soul-Shatter Talisman in a given direction (primary attack, no cd)."""
 
     def __init__(self, direction, attacks=2, repetitions=1):
+        """初始化SoulShatterTalisman命令
+        
+        Args:
+            direction: 攻击方向（水平方向箭头键）
+            attacks: 每次重复的攻击次数，默认为2
+            repetitions: 攻击重复次数，默认为1
+        """
         super().__init__(locals())
+        # 验证并设置方向键
         self.direction = settings.validate_horizontal_arrows(direction)
+        # 转换攻击次数为整数
         self.attacks = int(attacks)
+        # 转换重复次数为整数
         self.repetitions = int(repetitions)
 
     def main(self):
+        """执行Soul-Shatter Talisman攻击
+        
+        执行流程：
+        1. 短暂延迟确保操作流畅
+        2. 按下方向键
+        3. 短暂延迟
+        4. 如果启用了stage_fright且有70%的概率，添加随机延迟以模拟人类操作
+        5. 按照指定的重复次数执行攻击
+        6. 释放方向键
+        7. 根据攻击次数添加不同的延迟以确保攻击完成
+        """
+        # 短暂延迟，确保操作流畅
         time.sleep(0.05)
+        # 按下方向键
         key_down(self.direction)
+        # 短暂延迟
         time.sleep(0.05)
+        # 如果启用了stage_fright且有70%的概率，添加随机延迟以模拟人类操作
         if config.stage_fright and utils.bernoulli(0.7):
             time.sleep(utils.rand_float(0.1, 0.3))
+        # 按照指定的重复次数执行攻击
         for _ in range(self.repetitions):
             press(Key.SOUL_SHATTER_TALISMAN, self.attacks, up_time=0.05)
+        # 释放方向键
         key_up(self.direction)
+        # 根据攻击次数添加不同的延迟以确保攻击完成
         if self.attacks > 2:
             time.sleep(0.3)
         else:
