@@ -23,6 +23,7 @@ SKILL_COOLDOWNS = {
     'WAILING_HEAVENS': 121,
     'SILENT_ARC': 21,
     'FULL_MOON_RAGE': 61,
+    'ERDA_SHOWER': 60,
 }
 
 
@@ -54,6 +55,10 @@ class Key:
     ORIGIN = '7'
     ASCENT = '8'
 
+# 向下跳跃计数器和之前X轴移动方向
+down_jump_count = 0
+previous_x_direction = 'right'  # 默认向右
+
 
 
 #########################
@@ -67,8 +72,35 @@ def step(direction, target):
     向下：可选三级跳。
     向左/右：闪现跳跃+攻击。
     """
+    global down_jump_count, previous_x_direction
+    
+    # 记录X轴移动方向
+    if direction in ['left', 'right']:
+        previous_x_direction = direction
+    
+    # 处理向下跳跃计数
+    if direction == 'down':
+        # 增加向下跳跃计数器
+        down_jump_count += 1
+        print(f'向下跳跃次数: {down_jump_count}')
+        
+        # 如果连续执行了3次向下跳跃，向之前X轴移动的方向进行一次跳跃
+        if down_jump_count >= 3:
+            print(f'连续执行向下跳跃 {down_jump_count}次，向{previous_x_direction}方向跳跃')
+            # 向之前X轴移动的方向跳跃
+            key_down(previous_x_direction)
+            time.sleep(0.1)
+            press(Key.JUMP, 1)
+            key_up(previous_x_direction)
+            time.sleep(0.3)
+            # 重置计数器
+            down_jump_count = 0
+    else:
+        # 如果不是向下方向，重置计数器
+        down_jump_count = 0
+    
     if direction == 'up':
-        time.sleep(0.3)
+        time.sleep(0.1)
         # 使用绳索升降机
         press(Key.ROPE_LIFT, 1)
         # 计算目标与当前位置的垂直距离
@@ -80,18 +112,22 @@ def step(direction, target):
     num_presses = 2
     # 向下方向只需要1次跳跃
     if direction == 'down':
+        print('step的向下跳跃1次')
         num_presses = 1
     # 如果启用了stage_fright且有75%的概率，添加随机延迟以模拟人类操作
     if config.stage_fright and utils.bernoulli(0.75):
         time.sleep(utils.rand_float(0.1, 0.3))
     # 计算目标与当前位置的垂直距离
-    d_y = target[1] - config.player_pos[1]
-    # 如果垂直距离大于移动公差的1.5倍且方向是向下，执行三级跳
-    if abs(d_y) > settings.move_tolerance * 1.5 and direction == 'down':
-        press(Key.JUMP, 3)
+    # d_y = target[1] - config.player_pos[1]
+    # # 如果垂直距离大于移动公差的1.5倍且方向是向下，执行三级跳
+    # if abs(d_y) > settings.move_tolerance * 1.5 and direction == 'down':
+    #     print('step的距离大于移动公差的1.5倍且方向是向下，下跳跃1次')
+    #     press(Key.JUMP, 1)
+    #     time.sleep(0.5)
     # 左右移动则执行闪现跳跃+主攻攻击
     press(Key.JUMP, num_presses)
     press(Key.MIST_SLASH_IV, 4, down_time=0.05, up_time=0.05)
+    time.sleep(0.15)
 
 
 class Adjust(Command):
@@ -111,115 +147,120 @@ class Adjust(Command):
     def main(self):
         """
         执行调整逻辑，通过小幅度移动微调玩家位置到目标点。
-        当角色在目标点上方时，优先执行向下移动。
         """
         counter = self.max_steps  # 剩余调整步数
+        toggle = True  # 切换标志，用于在X和Y方向调整之间切换
         error = utils.distance(config.player_pos, self.target)  # 当前位置与目标位置的距离
         y_fail_count = 0  # Y轴调整失败次数
-        last_x_direction = ''  # 上一次X轴移动方向
+        last_x_direction = 'right'  # 上一次X轴移动方向，默认为右
+        last_position = config.player_pos  # 上一次位置
+        last_position_time = time.time()  # 上一次位置记录时间
         
         # 当机器人启用、还有剩余步数且误差大于调整容差时继续调整
         while config.enabled and counter > 0 and error > settings.adjust_tolerance:
-            # 检查Y方向是否需要向下移动（角色在目标点上方）
-            d_y = self.target[1] - config.player_pos[1]  # Y方向误差
-            y_threshold = settings.adjust_tolerance / math.sqrt(2)  # Y方向调整阈值
+            # 检查位置是否超过2秒未变化
+            current_time = time.time()
+            if current_time - last_position_time > 2.0 and last_x_direction:
+                print(f"位置超过2秒未变化，向{last_x_direction}方向跳跃1次")
+                # 向之前的X轴移动方向跳跃
+                key_down(last_x_direction)
+                time.sleep(0.1)
+                press(Key.JUMP, 1)
+                key_up(last_x_direction)
+                time.sleep(0.5)
+                # 更新位置和时间
+                last_position = config.player_pos
+                last_position_time = current_time
             
-            # 优先处理向下移动（角色在目标点上方）
-            if d_y > y_threshold:
-                # 需要向下移动
-                key_down('down')  # 按下下方向键
-                time.sleep(0.05)  # 短暂延迟
-                press(Key.JUMP, 3, down_time=0.1)  # 按跳跃键
-                key_up('down')  # 释放下方向键
-                time.sleep(0.05)  # 短暂延迟
-                
-                counter -= 1  # 减少剩余调整步数
-                
-                # 检查Y轴调整是否成功
-                new_error = utils.distance(config.player_pos, self.target)
-                if new_error >= error:  # 如果误差没有减小，认为调整失败
-                    y_fail_count += 1
-                else:
-                    y_fail_count = 0  # 重置失败次数
-                
-                # 当Y轴调整失败次数大于2时，向之前的X轴移动方向继续移动一个move_tolerance
-                if y_fail_count > 2 and last_x_direction:
-                    print(f"Y轴调整失败次数过多({y_fail_count}次)，向{last_x_direction}方向移动0.5个move_tolerance")
-                    
-                    # 计算需要移动的距离（0.5个move_tolerance）
-                    move_distance = settings.move_tolerance * 0.5
-                    
-                    # 向之前的X轴移动方向移动
-                    key_down(last_x_direction)
-                    time.sleep(0.2)  # 移动一段时间
-                    key_up(last_x_direction)
-                    time.sleep(0.1)  # 等待移动完成
-                    
-                    # 重置失败次数
-                    y_fail_count = 0
-            else:
+            if toggle:
                 # 调整X方向
                 d_x = self.target[0] - config.player_pos[0]  # X方向误差
-                x_threshold = settings.adjust_tolerance / math.sqrt(2)  # X方向调整阈值
+                threshold = settings.adjust_tolerance / math.sqrt(2)  # 调整阈值
                 
-                if abs(d_x) > x_threshold:  # 如果X方向误差超过阈值
+                if abs(d_x) > threshold:  # 如果X方向误差超过阈值
                     walk_counter = 0  # 步行计数器，防止无限循环
                     
                     if d_x < 0:  # 需要向左移动
                         last_x_direction = 'left'  # 记录X轴移动方向
                         key_down('left')  # 按下左方向键
                         # 持续移动直到误差在阈值内或达到最大步行次数
-                        while config.enabled and d_x < -1 * x_threshold and walk_counter < 60:
+                        while config.enabled and d_x < -1 * threshold and walk_counter < 60:
                             time.sleep(0.05)  # 短暂延迟
                             walk_counter += 1  # 增加步行计数
                             d_x = self.target[0] - config.player_pos[0]  # 更新误差
                         key_up('left')  # 释放左方向键
+                        # 更新位置和时间
+                        last_position = config.player_pos
+                        last_position_time = time.time()
                     else:  # 需要向右移动
                         last_x_direction = 'right'  # 记录X轴移动方向
                         key_down('right')  # 按下右方向键
                         # 持续移动直到误差在阈值内或达到最大步行次数
-                        while config.enabled and d_x > x_threshold and walk_counter < 60:
+                        while config.enabled and d_x > threshold and walk_counter < 60:
                             time.sleep(0.05)  # 短暂延迟
                             walk_counter += 1  # 增加步行计数
                             d_x = self.target[0] - config.player_pos[0]  # 更新误差
                         key_up('right')  # 释放右方向键
+                        # 更新位置和时间
+                        last_position = config.player_pos
+                        last_position_time = time.time()
                     
                     counter -= 1  # 减少剩余调整步数
                     y_fail_count = 0  # 重置Y轴失败次数
+            else:
+                # 调整Y方向
+                d_y = self.target[1] - config.player_pos[1]  # Y方向误差
+                
+                if abs(d_y) > settings.adjust_tolerance / math.sqrt(2):  # 如果Y方向误差超过阈值
+                    if d_y < 0:  # 需要向上移动
+                        press(Key.ROPE_LIFT, 1)  # 使用绳索上升
+                        time.sleep(1.5)  # 等待动作完成
+                        # 更新位置和时间
+                        last_position = config.player_pos
+                        last_position_time = time.time()
+                    else:  # 需要向下移动
+                        print('adjust的向下跳跃2次')
+                        key_down('down')  # 按下下方向键
+                        time.sleep(0.1)  # 短暂延迟
+                        press(Key.JUMP, 2, down_time=0.1)  # 按跳跃键
+                        key_up('down')  # 释放下方向键
+                        time.sleep(0.5)  # 短暂延迟
+                        # 更新位置和时间
+                        last_position = config.player_pos
+                        last_position_time = time.time()
+                    
+                    counter -= 1  # 减少剩余调整步数
+                    
+                    # 检查Y轴调整是否成功
+                    new_error = utils.distance(config.player_pos, self.target)
+                    if new_error >= error:  # 如果误差没有减小，认为调整失败
+                        y_fail_count += 1
+                    else:
+                        y_fail_count = 0  # 重置失败次数
+                    
+                    # 当Y轴调整失败次数大于2时，向之前的X轴移动方向继续移动一个move_tolerance
+                    if y_fail_count > 2 and last_x_direction:
+                        print(f"Y轴调整失败次数过多({y_fail_count}次)，向{last_x_direction}方向移动0.5个move_tolerance")
+                        
+                        # 计算需要移动的距离（0.5个move_tolerance）
+                        move_distance = settings.move_tolerance * 0.5
+                        
+                        # 向之前的X轴移动方向移动
+                        key_down(last_x_direction)
+                        time.sleep(0.2)  # 移动一段时间
+                        key_up(last_x_direction)
+                        time.sleep(0.1)  # 等待移动完成
+                        # 更新位置和时间
+                        last_position = config.player_pos
+                        last_position_time = time.time()
+                        
+                        # 重置失败次数
+                        y_fail_count = 0
                 else:
-                    # 调整Y方向（除向下移动外的其他情况）
-                    if abs(d_y) > y_threshold:
-                        if d_y < 0:  # 需要向上移动
-                            press(Key.ROPE_LIFT, 1)  # 使用绳索上升
-                            time.sleep(1.5)  # 等待动作完成
-                        
-                        counter -= 1  # 减少剩余调整步数
-                        
-                        # 检查Y轴调整是否成功
-                        new_error = utils.distance(config.player_pos, self.target)
-                        if new_error >= error:  # 如果误差没有减小，认为调整失败
-                            y_fail_count += 1
-                        else:
-                            y_fail_count = 0  # 重置失败次数
-                        
-                        # 当Y轴调整失败次数大于2时，向之前的X轴移动方向继续移动一个move_tolerance
-                        if y_fail_count > 2 and last_x_direction:
-                            print(f"Y轴调整失败次数过多({y_fail_count}次)，向{last_x_direction}方向移动0.5个move_tolerance")
-                            
-                            # 计算需要移动的距离（0.5个move_tolerance）
-                            move_distance = settings.move_tolerance * 0.5
-                            
-                            # 向之前的X轴移动方向移动
-                            key_down(last_x_direction)
-                            time.sleep(0.2)  # 移动一段时间
-                            key_up(last_x_direction)
-                            time.sleep(0.1)  # 等待移动完成
-                            
-                            # 重置失败次数
-                            y_fail_count = 0
+                    y_fail_count = 0  # 重置失败次数
             
             error = utils.distance(config.player_pos, self.target)  # 更新当前误差
-
+            toggle = not toggle  # 切换调整方向
 
 class Buff(Command):
     """Decent skills (F1–F4) on 3 min rotation."""
