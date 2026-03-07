@@ -1,0 +1,42 @@
+*, x=0.667, y=0.518, frequency=4, skip=False, adjust=True
+    SkillRotation, duration=0.5
+*, x=0.723, y=0.661, frequency=4, skip=False, adjust=True
+    SkillRotation, duration=0.5
+*, x=0.728, y=0.768, frequency=4, skip=False, adjust=True
+    SkillRotation, duration=0.5
+*, x=0.128, y=0.768, frequency=4, skip=False, adjust=True
+    SkillRotation, duration=0.5
+*, x=0.159, y=0.661, frequency=4, skip=False, adjust=True
+    SkillRotation, duration=0.5
+*, x=0.251, y=0.527, frequency=4, skip=False, adjust=True
+    SkillRotation, duration=0.5
+*, x=0.318, y=0.652, frequency=4, skip=False, adjust=True
+    SkillRotation, duration=0.5
+*, x=0.456, y=0.527, frequency=4, skip=False, adjust=True
+    SkillRotation, duration=0.5
+*, x=0.482, y=0.652, frequency=1, skip=False, adjust=True
+    Wait, duration=0.3
+    ¶¾Çò
+    Wait, duration=7.7
+*, x=0.482, y=0.768, frequency=1, skip=False, adjust=True
+    Wait, duration=0.5
+    Ö÷¹¥, direction=left, attacks=2, repetitions=2
+*, x=0.482, y=0.652, frequency=1, skip=False, adjust=True
+    Wait, duration=0.3
+    »ðÇò
+    Wait, duration=7.7
+*, x=0.482, y=0.768, frequency=1, skip=False, adjust=True
+    Wait, duration=0.5
+    Ö÷¹¥, direction=right, attacks=2, repetitions=2
+*, x=0.482, y=0.652, frequency=1, skip=False, adjust=False
+    Wait, duration=0.3
+    ´«È¾
+    Wait, duration=1
+    µ¯Çò
+    Wait, duration=6.3
+*, x=0.482, y=0.768, frequency=1, skip=False, adjust=True
+    Wait, duration=0.5
+    Ö÷¹¥, direction=left, attacks=2, repetitions=2
+*, x=0.482, y=0.768, frequency=2, skip=False, adjust=True
+    Wait, duration=0.5
+    ¶¾Õó·ÅÖÃ
