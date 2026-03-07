@@ -1,0 +1,22 @@
+# PMAGIC keybindings
+# Format: skill_name:key
+JUMP:c
+TELEPORT:shift
+ROPE_LIFT:v
+PICK_UP:z
+bufff2:f2
+爱尔达放置:4
+威尔蜘蛛腿:5
+ORIGIN:w
+ASCENT:ctrl
+主攻:x
+传染:s
+毒球:d
+火球:f
+炎魔召唤:f1
+炎魔爆发:alt
+弹球:r
+毒火陨石:a
+毒阵放置:q
+终极无限1号:1
+终极无限2号:2
