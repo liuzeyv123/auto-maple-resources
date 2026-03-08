@@ -1,4 +1,4 @@
-"""A collection of all commands that a Kanna can use to interact with the game."""
+"""A collection of all commands that Hayato can use to interact with the game."""
 
 from src.common import config, settings, utils
 import time
@@ -8,74 +8,63 @@ from src.common.vkeys import press, key_down, key_up
 
 # Cooldowns for SkillRotation (Key attribute name -> sec). 0 = no cooldown (spam).
 # Uses Key attribute names so user rebinds are respected.
-Jump_Attack_TYPE = False
-# 主攻模式选择，按住或者点按 hold or tap
-MAIN_ATTACK_TYPE = 'tap'
+# 主要攻击按键
+MAIN_ATTACK_TYPE = 'jump_att'
 # 是否在控制台打印按键信息
-PRINT_PRESS_MSG = True
+PRINT_PRESS_MSG = False
+# 技能冷却时间配置（技能名称 -> 冷却时间秒数）。0 = 无冷却时间（可连续使用）。
+# 使用 Key 属性名称，以便尊重用户的按键绑定。
+SKILL_COOLDOWNS = {
+    'MIST_SLASH_IV': 0,
+    'CROSSING_DRAW': 21,
+    'LIGHT_CUTTER': 11,
+    'CRASHING_TIDE': 61,
+    'DARK_MOON_CUT': 21,
+    'WAILING_HEAVENS': 121,
+    'SILENT_ARC': 21,
+    'FULL_MOON_RAGE': 61,
+    'ERDA_SHOWER': 60,
+}
+
+
+# 按键映射列表
+class Key:
+    # 移动
+    JUMP = 'c'
+    ROPE_LIFT = 'v'
+    PICK_UP = 'z'
+
+    # 增益技能
+    AUTO_BUFF_LIST = '3'
+
+    # 共享技能（所有职业）
+    ERDA_SHOWER = '5'        # 60秒
+    TRUE_ARACHNID_REFLECTION = '6'   # 250秒
+
+    # Hayato 特有技能
+    MIST_SLASH_IV = 'x'              # 主要攻击，无冷却时间
+    CROSSING_DRAW = 'q'  # 20秒冷却
+    LIGHT_CUTTER = 'd'                  # 移动技能，假10秒冷却以避免 spam
+    CRASHING_TIDE = 'f'                   # 60秒冷却
+    DARK_MOON_CUT = 's'            # 20秒冷却
+    WAILING_HEAVENS = 'r'                  # 120秒冷却
+    SILENT_ARC = 'ctrl'                  # 20秒冷却
+    FULL_MOON_RAGE = 'e'                  # 60秒冷却
+    
+    # 6th 职业技能
+    ORIGIN = '7'
+    ASCENT = '8'
 
 # 向下跳跃计数器和之前X轴移动方向
 down_jump_count = 0
 previous_x_direction = 'right'  # 默认向右
-# 向上移动失败计数器
-up_move_fail_count = 0
 
-SKILL_COOLDOWNS = {
-    '主攻': 0,
-    '传染': 25,
-    '毒球': 25,
-    '火球': 25,
-    '炎魔召唤': 270,
-    '炎魔爆发': 60,
-    '弹球': 50,
-    '毒火陨石': 10,
-    '毒阵放置': 60,
-    '爱尔达放置': 60,
-    '终极无限1号': 90,
-    '终极无限2号': 90,
-    '威尔蜘蛛腿': 250,
-}
-
-# 技能轮换黑名单，这些技能不会被加入技能轮换模式
-# 示例：SKILL_ROTATION_BLACKLIST = ['炎魔召唤', '终极无限2号']
-SKILL_ROTATION_BLACKLIST = ['传染','毒球','火球','弹球','毒阵放置']
-
-
-class Key:
-    # Movement (teleport class: no double jump; use teleport to get around)
-    JUMP = 'c'
-    TELEPORT = 'shift'
-    ROPE_LIFT = 'v'
-    PICK_UP = 'z'
-
-    # Decent skills (F1–F4), 3 min rotation
-    bufff2 = 'f2'
-
-    # Shared skills (all classes)
-    爱尔达放置 = '4'              # 60 sec
-    威尔蜘蛛腿 = '5' # 250 sec
-
-    # 6th job skills
-    ORIGIN = 'w'
-    ASCENT = 'ctrl'
-
-    # PMAGIC-specific skills
-    主攻 = 'x'
-    传染 = 's'
-    毒球 = 'd'
-    火球 = 'f'
-    炎魔召唤 = 'f1'
-    炎魔爆发 = 'alt'
-    弹球 = 'r'
-    毒火陨石 = 'a'
-    毒阵放置 = 'q'
-    终极无限1号 = '1'
-    终极无限2号 = '2'
 
 
 #########################
 #       Commands        #
 #########################
+
 def step(direction, target):
     """
     在给定方向上向目标执行一步移动。
@@ -100,58 +89,27 @@ def step(direction, target):
             print(f'连续执行向下跳跃 {down_jump_count}次，向{previous_x_direction}方向跳跃')
             # 向之前X轴移动的方向跳跃
             key_down(previous_x_direction)
-            time.sleep(0.05)
+            time.sleep(0.1)
             press(Key.JUMP, 1)
             key_up(previous_x_direction)
-            time.sleep(0.2)
+            time.sleep(0.3)
             # 重置计数器
             down_jump_count = 0
     else:
         # 如果不是向下方向，重置计数器
         down_jump_count = 0
     
-    # 默认为1次闪现
-    num_presses = 1
-    
     if direction == 'up':
-        global up_move_fail_count
+        time.sleep(0.1)
+        # 使用绳索升降机
+        press(Key.ROPE_LIFT, 1)
         # 计算目标与当前位置的垂直距离
         d_y = target[1] - config.player_pos[1]
-        # 记录移动前的位置
-        before_pos = config.player_pos
-        # 当垂直距离大于0.25时，需要使用绳索升降机
-        if abs(d_y) > 0.25:
-            time.sleep(0.3)
-            # 使用绳索升降机
-            press(Key.ROPE_LIFT, 2)
-            # 根据距离调整睡眠时间
-            time.sleep(2.0 if abs(d_y) > 0.08 else 1)
-        # 当垂直距离小于0.25时执行闪现
-        else:
-            key_down("up")
-            time.sleep(0.1)
-            press(Key.TELEPORT, num_presses)
-            key_up("up")
-        # 检查Y轴移动是否成功
-        after_pos = config.player_pos
-        if abs(after_pos[1] - before_pos[1]) < 0.02:
-            # 向上移动失败，增加失败计数器
-            up_move_fail_count += 1
-            print(f'向上移动失败，失败次数: {up_move_fail_count}')
-            # 只有连续失败两次才会触发跳跃
-            if up_move_fail_count >= 2:
-                print(f'向上移动连续失败{up_move_fail_count}次，尝试向{previous_x_direction}方向跳跃')
-                # 向之前的X轴移动方向跳跃
-                key_down(previous_x_direction)
-                time.sleep(0.1)
-                key_up(previous_x_direction)
-                time.sleep(0.3)
-                # 重置失败计数器
-                up_move_fail_count = 0
-        else:
-            # 向上移动成功，重置失败计数器
-            up_move_fail_count = 0
+        # 根据距离调整睡眠时间
+        time.sleep(2.0 if abs(d_y) > 0.08 else 1.2)
         return
+    # 默认为2次跳跃（闪现跳跃）
+    num_presses = 2
     # 向下方向只需要1次跳跃
     if direction == 'down':
         print('step的向下跳跃1次')
@@ -159,34 +117,46 @@ def step(direction, target):
     # 如果启用了stage_fright且有75%的概率，添加随机延迟以模拟人类操作
     if config.stage_fright and utils.bernoulli(0.75):
         time.sleep(utils.rand_float(0.1, 0.3))
-    # 记录移动前的位置
-    before_pos = config.player_pos
     # 计算目标与当前位置的垂直距离
-    d_y = target[1] - config.player_pos[1]
+    # d_y = target[1] - config.player_pos[1]
+    # # 如果垂直距离大于移动公差的1.5倍且方向是向下，执行三级跳
     # if abs(d_y) > settings.move_tolerance * 1.5 and direction == 'down':
-    if abs(d_y) > 0.25 and direction == 'down':
-        press(Key.JUMP, 1)
-    press(Key.TELEPORT, num_presses)
+    #     print('step的距离大于移动公差的1.5倍且方向是向下，下跳跃1次')
+    #     press(Key.JUMP, 1)
+    #     time.sleep(0.5)
+    # 左右移动则执行闪现跳跃+主攻攻击
+    press(Key.JUMP, num_presses)
+    press(Key.MIST_SLASH_IV, 4, down_time=0.05, up_time=0.05)
+    time.sleep(0.15)
 
 
 class Adjust(Command):
-    """Fine-tunes player position using small movements."""
+    """使用小幅度移动微调玩家位置。"""
 
     def __init__(self, x, y, max_steps=5):
+        """
+        初始化调整命令。
+        :param x: 目标X坐标
+        :param y: 目标Y坐标
+        :param max_steps: 最大调整步数
+        """
         super().__init__(locals())
-        self.target = (float(x), float(y))
-        self.max_steps = settings.validate_nonnegative_int(max_steps)
+        self.target = (float(x), float(y))  # 目标位置坐标
+        self.max_steps = settings.validate_nonnegative_int(max_steps)  # 验证并设置最大调整步数
 
     def main(self):
-        counter = self.max_steps
-        toggle = True
-        error = utils.distance(config.player_pos, self.target)
-        xy_threshold = settings.adjust_tolerance / math.sqrt(2)
-        y_threshold = settings.adjust_tolerance
+        """
+        执行调整逻辑，通过小幅度移动微调玩家位置到目标点。
+        """
+        counter = self.max_steps  # 剩余调整步数
+        toggle = True  # 切换标志，用于在X和Y方向调整之间切换
+        error = utils.distance(config.player_pos, self.target)  # 当前位置与目标位置的距离
         y_fail_count = 0  # Y轴调整失败次数
         last_x_direction = 'right'  # 上一次X轴移动方向，默认为右
         last_position = config.player_pos  # 上一次位置
         last_position_time = time.time()  # 上一次位置记录时间
+        
+        # 当机器人启用、还有剩余步数且误差大于调整容差时继续调整
         while config.enabled and counter > 0 and error > settings.adjust_tolerance:
             # 检查位置是否超过2秒未变化
             current_time = time.time()
@@ -243,16 +213,18 @@ class Adjust(Command):
                 
                 if abs(d_y) > settings.adjust_tolerance / math.sqrt(2):  # 如果Y方向误差超过阈值
                     if d_y < 0:  # 需要向上移动
-                        Teleport('up').main()
+                        press(Key.ROPE_LIFT, 1)  # 使用绳索上升
+                        time.sleep(1.5)  # 等待动作完成
                         # 更新位置和时间
                         last_position = config.player_pos
                         last_position_time = time.time()
                     else:  # 需要向下移动
+                        print('adjust的向下跳跃2次')
                         key_down('down')  # 按下下方向键
                         time.sleep(0.1)  # 短暂延迟
                         press(Key.JUMP, 2, down_time=0.1)  # 按跳跃键
                         key_up('down')  # 释放下方向键
-                        time.sleep(0.3)  # 短暂延迟
+                        time.sleep(0.5)  # 短暂延迟
                         # 更新位置和时间
                         last_position = config.player_pos
                         last_position_time = time.time()
@@ -290,67 +262,8 @@ class Adjust(Command):
             error = utils.distance(config.player_pos, self.target)  # 更新当前误差
             toggle = not toggle  # 切换调整方向
 
-
-class Teleport(Command):
-    """
-    Teleports in a given direction, jumping if specified. Adds the player's position
-    to the current Layout if necessary.
-    """
-
-    def __init__(self, direction, jump='False'):
-        super().__init__(locals())
-        self.direction = settings.validate_arrows(direction)
-        self.jump = settings.validate_boolean(jump)
-
-    def main(self):
-        # 处理向上移动的情况
-        if self.direction == 'up':
-            time.sleep(0.4)
-            # 使用绳索升降机技能
-            press(Key.ROPE_LIFT, 2)
-            # 等待1.5秒，确保角色完成上升动作
-            time.sleep(1.5)
-            # 如果启用了布局记录，将当前位置添加到布局中
-            if settings.record_layout:
-                config.layout.add(*config.player_pos)
-            # 结束当前步骤
-            return
-        # 非向上方向时，默认使用3次跳跃（闪现跳跃）
-        num_presses = 3
-        # 短暂延迟，确保操作流畅
-        time.sleep(0.05)
-        if self.direction == 'down':
-            num_presses = 2
-        key_down(self.direction)
-        time.sleep(0.05)
-        if self.jump:
-            if self.direction == 'down':
-                press(Key.JUMP, 3, down_time=0.1)
-            else:
-                press(Key.JUMP, 1)
-        press(Key.TELEPORT, num_presses)
-        key_up(self.direction)
-        if settings.record_layout:
-            config.layout.add(*config.player_pos)
-
-
-class RopeLift(Command):
-    """Uses Rope Lift once (e.g. for going up)."""
-
-    def main(self):
-        time.sleep(0.4)
-        press(Key.ROPE_LIFT, 1)
-
-
-class Pickup(Command):
-    """Uses Pick Up once."""
-
-    def main(self):
-        press(Key.PICK_UP, 1)
-
-
 class Buff(Command):
-    """Uses decent skills (F1–F4) on 3 min rotation."""
+    """Decent skills (F1–F4) on 3 min rotation."""
 
     def __init__(self):
         super().__init__(locals())
@@ -358,7 +271,7 @@ class Buff(Command):
 
     def main(self):
         decent_buffs = [
-            Key.bufff2,
+            Key.AUTO_BUFF_LIST,
         ]
         DECENT_CD = 180  # 3 min
         now = time.time()
@@ -368,11 +281,46 @@ class Buff(Command):
             self.decent_buff_time = now
 
 
-class 主攻(Command):
-    """Attacks using 主攻 in a given direction (primary attack, no cd)."""
+class FlashJump(Command):
+    """执行闪现跳跃到指定方向（使用JUMP键，按2次）。向上方向：仅使用绳索升降机。"""
+
+    def __init__(self, direction):
+        """初始化FlashJump命令
+        
+        Args:
+            direction: 跳跃方向（上、下、左、右）
+        """
+        super().__init__(locals())
+        # 验证并设置方向键
+        self.direction = settings.validate_arrows(direction)
+
+    def main(self):
+        """执行闪现跳跃
+        
+        执行流程：
+        1. 如果方向是向上，则使用绳索升降机
+        2. 否则，按下方向键，执行闪现跳跃，释放方向键
+        """
+        if self.direction == 'up':
+            # 使用绳索升降机
+            press(Key.ROPE_LIFT, 1)
+            time.sleep(1.5)
+            return
+        # 按下方向键
+        key_down(self.direction)
+        time.sleep(0.1)
+        # 执行闪现跳跃（按2次跳跃键）
+        press(Key.JUMP, 2)
+        # 释放方向键
+        key_up(self.direction)
+        time.sleep(0.5)
+
+
+class MistSlashIV(Command):
+    """使用Mist SlashIV（ctrl）在指定方向攻击。主要攻击，无冷却时间。"""
 
     def __init__(self, direction, attacks=2, repetitions=1):
-        """初始化主攻命令
+        """初始化MistSlashIV命令
         
         Args:
             direction: 攻击方向（水平方向箭头键）
@@ -388,7 +336,7 @@ class 主攻(Command):
         self.repetitions = int(repetitions)
 
     def main(self):
-        """执行主攻攻击
+        """执行MistSlashIV攻击
         
         执行流程：
         1. 短暂延迟确保操作流畅
@@ -410,7 +358,7 @@ class 主攻(Command):
             time.sleep(utils.rand_float(0.1, 0.3))
         # 按照指定的重复次数执行攻击
         for _ in range(self.repetitions):
-            press(Key.主攻, self.attacks, up_time=0.05)
+            press(Key.MIST_SLASH_IV, self.attacks, up_time=0.05)
         # 释放方向键
         key_up(self.direction)
         # 根据攻击次数添加不同的延迟以确保攻击完成
@@ -420,99 +368,78 @@ class 主攻(Command):
             time.sleep(0.2)
 
 
-class 传染(Command):
-    """Uses 传染 once (25 sec cd)."""
+class LightCutter(Command):
+    """使用Light Cutter (x) - 移动技能。假10秒冷却以避免 spam。"""
 
     def main(self):
-        press(Key.传染, 2, up_time=0.05)
+        press(Key.LIGHT_CUTTER, 2, up_time=0.05)
 
 
-class 毒球(Command):
-    """Uses 毒球 once (25 sec cd)."""
-
-    def main(self):
-        press(Key.毒球, 2, up_time=0.05)
-
-
-class 火球(Command):
-    """Uses 火球 once (25 sec cd)."""
+class CrossingDraw(Command):
+    """使用Crossing Draw一次（20秒冷却）。"""
 
     def main(self):
-        press(Key.火球, 2, up_time=0.05)
+        press(Key.CROSSING_DRAW, 3)
 
 
-class 炎魔召唤(Command):
-    """Uses 炎魔召唤 once (270 sec cd)."""
-
-    def main(self):
-        press(Key.炎魔召唤, 3)
-
-
-class 炎魔爆发(Command):
-    """Uses 炎魔爆发 once (60 sec cd)."""
+class CrashingTide(Command):
+    """使用Crashing Tide一次（60秒冷却）。"""
 
     def main(self):
-        press(Key.炎魔爆发, 3)
+        press(Key.CRASHING_TIDE, 3)
 
 
-class 弹球(Command):
-    """Uses 弹球 once (50 sec cd)."""
-
-    def main(self):
-        press(Key.弹球, 3)
-
-
-class 毒火陨石(Command):
-    """Uses 毒火陨石 once (10 sec cd)."""
+class DarkMoonCut(Command):
+    """使用Dark Moon Cut一次（20秒冷却）。"""
 
     def main(self):
-        press(Key.毒火陨石, 2, up_time=0.05)
+        press(Key.DARK_MOON_CUT, 3)
 
 
-class 毒阵放置(Command):
-    """Uses 毒阵放置 once (10 sec cd)."""
-
-    def main(self):
-        press(Key.毒阵放置, 2, up_time=0.05)
-
-
-class 爱尔达放置(Command):
-    """Uses 爱尔达放置 once (60 sec cd, shared)."""
+class WailingHeavens(Command):
+    """使用Wailing Heavens一次（120秒冷却）。"""
 
     def main(self):
-        press(Key.爱尔达放置, 3)
+        press(Key.WAILING_HEAVENS, 3)
 
 
-class 终极无限1号(Command):
-    """Uses 终极无限1号 once (180 sec cd)."""
-
-    def main(self):
-        press(Key.终极无限1号, 3)
-
-
-class 终极无限2号(Command):
-    """Uses 终极无限2号 once (360 sec cd)."""
+class SilentArc(Command):
+    """使用Silent Arc一次（20秒冷却）。"""
 
     def main(self):
-        press(Key.终极无限2号, 3)
+        press(Key.SILENT_ARC, 3)
 
 
-class 威尔蜘蛛腿(Command):
-    """Uses 威尔蜘蛛腿 once (250 sec cd, shared)."""
+class FullMoonRage(Command):
+    """使用Full Moon Rage一次（60秒冷却）。"""
 
     def main(self):
-        press(Key.威尔蜘蛛腿, 3)
+        press(Key.FULL_MOON_RAGE, 3)
+
+
+class ErdaShower(Command):
+    """使用Erda Shower一次（60秒冷却，共享）。"""
+
+    def main(self):
+        press(Key.ERDA_SHOWER, 3)
+
+
+class TrueArachnidReflection(Command):
+    """使用True Arachnid Reflection一次（250秒冷却，共享）。"""
+
+    def main(self):
+        press(Key.TRUE_ARACHNID_REFLECTION, 3)
 
 
 class Origin(Command):
-    """Uses Origin (6th job skill) once."""
+    """使用Origin（6th职业技能）一次。"""
 
     def main(self):
         press(Key.ORIGIN, 3)
 
 
 class Ascent(Command):
-    """Uses Ascent (6th job skill) once."""
+    """使用Ascent（6th职业技能）一次。"""
 
     def main(self):
         press(Key.ASCENT, 3)

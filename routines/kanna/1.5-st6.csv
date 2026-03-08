@@ -1,0 +1,8 @@
+*, x=0.734, y=0.736, frequency=1, skip=False, adjust=False
+    SkillRotation, duration=5
+*, x=0.617, y=0.245, frequency=1, skip=False, adjust=False
+    SkillRotation, duration=5
+*, x=0.236, y=0.736, frequency=1, skip=False, adjust=False
+    SkillRotation, duration=5
+*, x=0.297, y=0.245, frequency=1, skip=False, adjust=False
+    SkillRotation, duration=5
