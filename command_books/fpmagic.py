@@ -31,14 +31,14 @@ SKILL_COOLDOWNS = {
     '毒火陨石': 10,
     '毒阵放置': 60,
     '爱尔达放置': 60,
-    '终极无限1号': 90,
-    '终极无限2号': 90,
+    '终极无限1号': 180,
+    '终极无限2号': 340,
     '威尔蜘蛛腿': 250,
 }
 
 # 技能轮换黑名单，这些技能不会被加入技能轮换模式
 # 示例：SKILL_ROTATION_BLACKLIST = ['炎魔召唤', '终极无限2号']
-SKILL_ROTATION_BLACKLIST = ['传染','毒球','火球','弹球','毒阵放置']
+SKILL_ROTATION_BLACKLIST = ['传染','毒球','火球','弹球','毒阵放置','炎魔召唤']
 
 
 class Key:
@@ -119,14 +119,14 @@ def step(direction, target):
         d_y = target[1] - config.player_pos[1]
         # 记录移动前的位置
         before_pos = config.player_pos
-        # 当垂直距离大于0.25时，需要使用绳索升降机
-        if abs(d_y) > 0.25:
+        # 当垂直距离大于0.2时，需要使用绳索升降机
+        if abs(d_y) > 0.2:
             time.sleep(0.3)
             # 使用绳索升降机
             press(Key.ROPE_LIFT, 2)
             # 根据距离调整睡眠时间
             time.sleep(2.0 if abs(d_y) > 0.08 else 1)
-        # 当垂直距离小于0.25时执行闪现
+        # 当垂直距离小于0.2时执行闪现
         else:
             key_down("up")
             time.sleep(0.1)
