@@ -119,14 +119,14 @@ def step(direction, target):
         d_y = target[1] - config.player_pos[1]
         # 记录移动前的位置
         before_pos = config.player_pos
-        # 当垂直距离大于0.2时，需要使用绳索升降机
-        if abs(d_y) > 0.2:
+        # 当垂直距离大于0.25时，需要使用绳索升降机
+        if abs(d_y) > 0.25:
             time.sleep(0.3)
             # 使用绳索升降机
             press(Key.ROPE_LIFT, 2)
             # 根据距离调整睡眠时间
             time.sleep(2.0 if abs(d_y) > 0.08 else 1)
-        # 当垂直距离小于0.2时执行闪现
+        # 当垂直距离小于0.25时执行闪现
         else:
             key_down("up")
             time.sleep(0.1)
