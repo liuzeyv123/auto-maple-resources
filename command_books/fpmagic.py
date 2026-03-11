@@ -158,7 +158,7 @@ def step(direction, target):
         num_presses = 1
     # 如果启用了stage_fright且有75%的概率，添加随机延迟以模拟人类操作
     if config.stage_fright and utils.bernoulli(0.75):
-        time.sleep(utils.rand_float(0.1, 0.3))
+        time.sleep(utils.rand_float(0.075, 0.15))
     # 记录移动前的位置
     before_pos = config.player_pos
     # 计算目标与当前位置的垂直距离
@@ -407,7 +407,7 @@ class 主攻(Command):
         time.sleep(0.05)
         # 如果启用了stage_fright且有70%的概率，添加随机延迟以模拟人类操作
         if config.stage_fright and utils.bernoulli(0.7):
-            time.sleep(utils.rand_float(0.1, 0.3))
+            time.sleep(utils.rand_float(0.075, 0.15))
         # 按照指定的重复次数执行攻击
         for _ in range(self.repetitions):
             press(Key.主攻, self.attacks, up_time=0.05)

@@ -69,7 +69,7 @@ def step(direction, target):
     if direction == 'down':
         num_presses = 1
     if config.stage_fright and utils.bernoulli(0.75):
-        time.sleep(utils.rand_float(0.1, 0.3))
+        time.sleep(utils.rand_float(0.075, 0.15))
     d_y = target[1] - config.player_pos[1]
     if abs(d_y) > settings.move_tolerance * 1.5 and direction == 'down':
         press(Key.JUMP, 3)

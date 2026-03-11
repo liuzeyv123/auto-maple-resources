@@ -116,7 +116,7 @@ def step(direction, target):
         num_presses = 1
     # 如果启用了stage_fright且有75%的概率，添加随机延迟以模拟人类操作
     if config.stage_fright and utils.bernoulli(0.75):
-        time.sleep(utils.rand_float(0.1, 0.3))
+        time.sleep(utils.rand_float(0.075, 0.15))
     # 计算目标与当前位置的垂直距离
     # d_y = target[1] - config.player_pos[1]
     # # 如果垂直距离大于移动公差的1.5倍且方向是向下，执行三级跳
