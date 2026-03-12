@@ -34,6 +34,7 @@ SKILL_COOLDOWNS = {
     '终极无限1号': 180,
     '终极无限2号': 340,
     '威尔蜘蛛腿': 250,
+    '陨石雨': 50,
 }
 
 # 技能轮换黑名单，这些技能不会被加入技能轮换模式
@@ -71,6 +72,7 @@ class Key:
     毒阵放置 = 'q'
     终极无限1号 = '1'
     终极无限2号 = '2'
+    陨石雨 = '7'
 
 
 #########################
@@ -491,11 +493,16 @@ class 终极无限1号(Command):
 
 
 class 终极无限2号(Command):
-    """Uses 终极无限2号 once (360 sec cd)."""
+    """Uses 终极无限2号 once (340 sec cd)."""
 
     def main(self):
         press(Key.终极无限2号, 3)
 
+class 陨石雨(Command):
+    """Uses 陨石雨 once (50 sec cd)."""
+
+    def main(self):
+        press(Key.陨石雨, 3)
 
 class 威尔蜘蛛腿(Command):
     """Uses 威尔蜘蛛腿 once (250 sec cd, shared)."""
