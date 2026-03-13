@@ -34,6 +34,7 @@ class Key:
     JUMP = 'c'
     ROPE_LIFT = 'v'
     GRAZING_CUT = 'shift'   #shitf位移技能
+    SS = 'b' #向上位移
     PICK_UP = 'z'
 
     # 增益技能
@@ -427,8 +428,18 @@ class MistSlashIV(Command):
 class LightCutter(Command):
     """使用Light Cutter (x) - 移动技能。假10秒冷却以避免 spam。"""
 
+    def __init__(self, direction='right', repeat=1):
+        super().__init__(locals())
+        self.direction = direction.lower()
+        self.repeat = int(repeat)
+
     def main(self):
-        press(Key.LIGHT_CUTTER, 2, up_time=0.05)
+        for _ in range(self.repeat):
+            if self.direction in ['left', 'right']:
+                key_down(self.direction)
+            press(Key.LIGHT_CUTTER, 1, up_time=0.05)
+            if self.direction in ['left', 'right']:
+                key_up(self.direction)
 
 
 class CrossingDraw(Command):
@@ -486,6 +497,12 @@ class TrueArachnidReflection(Command):
     def main(self):
         press(Key.TRUE_ARACHNID_REFLECTION, 3)
 
+class SS(Command):
+    """使用SS向上位移一次。"""
+
+    def main(self):
+        press(Key.SS, 2)
+
 
 class Origin(Command):
     """使用Origin（6th职业技能）一次。"""
@@ -502,8 +519,18 @@ class Ascent(Command):
 class GRAZING_CUT(Command):
     """使用Grazing Cut（shift位移）一次。"""
 
+    def __init__(self, direction='right', repeat=1):
+        super().__init__(locals())
+        self.direction = direction.lower()
+        self.repeat = int(repeat)
+
     def main(self):
-        press(Key.GRAZING_CUT, 1)
+        for _ in range(self.repeat):
+            if self.direction in ['left', 'right']:
+                key_down(self.direction)
+            press(Key.GRAZING_CUT, 1, down_time=0.05, up_time=0.05)
+            if self.direction in ['left', 'right']:
+                key_up(self.direction)
 
 
 class SkillList(Command):
