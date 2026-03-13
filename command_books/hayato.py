@@ -11,7 +11,7 @@ from src.common.vkeys import press, key_down, key_up
 # 主要攻击按键
 MAIN_ATTACK_TYPE = 'jump_att'
 # 是否在控制台打印按键信息
-PRINT_PRESS_MSG = False
+PRINT_PRESS_MSG = True
 # 技能冷却时间配置（技能名称 -> 冷却时间秒数）。0 = 无冷却时间（可连续使用）。
 # 使用 Key 属性名称，以便尊重用户的按键绑定。
 SKILL_COOLDOWNS = {
@@ -23,15 +23,17 @@ SKILL_COOLDOWNS = {
     'WAILING_HEAVENS': 121,
     'SILENT_ARC': 21,
     'FULL_MOON_RAGE': 61,
-    'ERDA_SHOWER': 60,
+    'ERDA_SHOWER': 61,
+    'BUFF': 121,
 }
 
-
+# SKILL_ROTATION_BLACKLIST = ['CROSSING_DRAW','DARK_MOON_CUT','SILENT_ARC','LIGHT_CUTTER']
 # 按键映射列表
 class Key:
     # 移动
     JUMP = 'c'
     ROPE_LIFT = 'v'
+    GRAZING_CUT = 'shift'   #shitf位移技能
     PICK_UP = 'z'
 
     # 增益技能
@@ -50,14 +52,22 @@ class Key:
     WAILING_HEAVENS = 'r'                  # 120秒冷却
     SILENT_ARC = 'ctrl'                  # 20秒冷却
     FULL_MOON_RAGE = 'e'                  # 60秒冷却
+    BUFF = '2'                      #一键爆发BUFF，120冷却
     
     # 6th 职业技能
     ORIGIN = '7'
     ASCENT = '8'
 
+# 技能列表配置
+SKILL_LIST = ['CROSSING_DRAW','DARK_MOON_CUT','SILENT_ARC']
+# 技能列表当前索引
+skill_list_index = 0
+
 # 向下跳跃计数器和之前X轴移动方向
 down_jump_count = 0
 previous_x_direction = 'right'  # 默认向右
+# 向上移动失败计数器
+up_move_fail_count = 0
 
 
 
@@ -73,6 +83,8 @@ def step(direction, target):
     向左/右：闪现跳跃+攻击。
     """
     global down_jump_count, previous_x_direction
+    from src.common import config
+    config.executing_movement = True
     
     # 记录X轴移动方向
     if direction in ['left', 'right']:
@@ -99,16 +111,54 @@ def step(direction, target):
         # 如果不是向下方向，重置计数器
         down_jump_count = 0
     
+    # if direction == 'up':
+    #     time.sleep(0.1)
+    #     # 使用绳索升降机
+    #     press(Key.ROPE_LIFT, 1)
+    #     # 计算目标与当前位置的垂直距离
+    #     d_y = target[1] - config.player_pos[1]
+    #     # 根据距离调整睡眠时间
+    #     time.sleep(2.0 if abs(d_y) > 0.08 else 1.2)
+    #     return
     if direction == 'up':
-        time.sleep(0.1)
-        # 使用绳索升降机
-        press(Key.ROPE_LIFT, 1)
+        global up_move_fail_count
         # 计算目标与当前位置的垂直距离
         d_y = target[1] - config.player_pos[1]
-        # 根据距离调整睡眠时间
-        time.sleep(2.0 if abs(d_y) > 0.08 else 1.2)
+        # 记录移动前的位置
+        before_pos = config.player_pos
+        # 当垂直距离大于0.22时，需要使用绳索升降机
+        if abs(d_y) > 0.22:
+            time.sleep(0.3)
+            # 使用绳索升降机
+            press(Key.ROPE_LIFT, 2)
+            # 根据距离调整睡眠时间
+            time.sleep(2.0 if abs(d_y) > 0.08 else 1)
+        # 当垂直距离小于0.22时执行shift向上位移
+        else:
+            press('7', 1, down_time=0.1, up_time=0.1)
+            time.sleep(0.5) 
+        # 检查Y轴移动是否成功
+        after_pos = config.player_pos
+        if abs(after_pos[1] - before_pos[1]) < 0.02:
+            # 向上移动失败，增加失败计数器
+            up_move_fail_count += 1
+            print(f'向上移动失败，失败次数: {up_move_fail_count}')
+            # 只有连续失败两次才会触发跳跃
+            if up_move_fail_count >= 2:
+                print(f'向上移动连续失败{up_move_fail_count}次，尝试向{previous_x_direction}方向跳跃')
+                # 向之前的X轴移动方向跳跃
+                key_down(previous_x_direction)
+                time.sleep(0.1)
+                press(Key.JUMP, 2)
+                key_up(previous_x_direction)
+                time.sleep(0.2)
+                # 重置失败计数器
+                up_move_fail_count = 0
+        else:
+            # 向上移动成功，重置失败计数器
+            up_move_fail_count = 0
         return
-    # 默认为2次跳跃（闪现跳跃）
+        # 默认为2次跳跃（闪现跳跃）
     num_presses = 2
     # 向下方向只需要1次跳跃
     if direction == 'down':
@@ -125,9 +175,10 @@ def step(direction, target):
     #     press(Key.JUMP, 1)
     #     time.sleep(0.5)
     # 左右移动则执行闪现跳跃+主攻攻击
-    press(Key.JUMP, num_presses)
+    press(Key.JUMP, num_presses, down_time=0.05, up_time=0.05)
     press(Key.MIST_SLASH_IV, 4, down_time=0.05, up_time=0.05)
-    time.sleep(0.15)
+    time.sleep(0.1)
+    config.executing_movement = False
 
 
 class Adjust(Command):
@@ -148,6 +199,8 @@ class Adjust(Command):
         """
         执行调整逻辑，通过小幅度移动微调玩家位置到目标点。
         """
+        from src.common import config
+        config.executing_movement = True
         counter = self.max_steps  # 剩余调整步数
         toggle = True  # 切换标志，用于在X和Y方向调整之间切换
         error = utils.distance(config.player_pos, self.target)  # 当前位置与目标位置的距离
@@ -213,8 +266,9 @@ class Adjust(Command):
                 
                 if abs(d_y) > settings.adjust_tolerance / math.sqrt(2):  # 如果Y方向误差超过阈值
                     if d_y < 0:  # 需要向上移动
-                        press(Key.ROPE_LIFT, 1)  # 使用绳索上升
-                        time.sleep(1.5)  # 等待动作完成
+                        time.sleep(0.1)  # 短暂延迟
+                        press(Key.ROPE_LIFT, 1, down_time=0.1, up_time=0.1)  # 使用位移上升   
+                        time.sleep(0.5)  # 等待动作完成
                         # 更新位置和时间
                         last_position = config.player_pos
                         last_position_time = time.time()
@@ -261,6 +315,8 @@ class Adjust(Command):
             
             error = utils.distance(config.player_pos, self.target)  # 更新当前误差
             toggle = not toggle  # 切换调整方向
+        
+        config.executing_movement = False
 
 class Buff(Command):
     """Decent skills (F1–F4) on 3 min rotation."""
@@ -443,3 +499,72 @@ class Ascent(Command):
 
     def main(self):
         press(Key.ASCENT, 3)
+class GRAZING_CUT(Command):
+    """使用Grazing Cut（shift位移）一次。"""
+
+    def main(self):
+        press(Key.GRAZING_CUT, 1)
+
+
+class SkillList(Command):
+    """按顺序释放技能列表中的技能。"""
+
+    def __init__(self):
+        """
+        初始化SkillList命令。
+        :param skills: 技能列表，包含技能名称的字符串列表
+        """
+        super().__init__(locals())
+        global SKILL_LIST, skill_list_index
+        
+        # 重置技能列表索引
+        skill_list_index = 0
+
+    def main(self):
+        """
+        执行技能列表中的下一个技能。
+        """
+        global SKILL_LIST, skill_list_index
+        
+        if not SKILL_LIST:
+            print("技能列表为空")
+            return
+        
+        # 获取当前技能
+        current_skill = SKILL_LIST[skill_list_index]
+        print(f"释放技能: {current_skill}")
+        
+        # 执行技能
+        if current_skill == 'MIST_SLASH_IV':
+            press(Key.MIST_SLASH_IV, 3)
+        elif current_skill == 'CROSSING_DRAW':
+            press(Key.CROSSING_DRAW, 3)
+        elif current_skill == 'LIGHT_CUTTER':
+            press(Key.LIGHT_CUTTER, 3)
+        elif current_skill == 'CRASHING_TIDE':
+            press(Key.CRASHING_TIDE, 3)
+        elif current_skill == 'DARK_MOON_CUT':
+            press(Key.DARK_MOON_CUT, 3)
+        elif current_skill == 'WAILING_HEAVENS':
+            press(Key.WAILING_HEAVENS, 3)
+        elif current_skill == 'SILENT_ARC':
+            press(Key.SILENT_ARC, 3)
+        elif current_skill == 'FULL_MOON_RAGE':
+            press(Key.FULL_MOON_RAGE, 3)
+        elif current_skill == 'ERDA_SHOWER':
+            press(Key.ERDA_SHOWER, 3)
+        elif current_skill == 'BUFF':
+            press(Key.BUFF, 3)
+        elif current_skill == 'ORIGIN':
+            press(Key.ORIGIN, 3)
+        elif current_skill == 'ASCENT':
+            press(Key.ASCENT, 3)
+        elif current_skill == 'TRUE_ARACHNID_REFLECTION':
+            press(Key.TRUE_ARACHNID_REFLECTION, 3)
+        elif current_skill == 'GRAZING_CUT':
+            press(Key.GRAZING_CUT, 3)
+        else:
+            print(f"未知技能: {current_skill}")
+        
+        # 更新技能列表索引
+        skill_list_index = (skill_list_index + 1) % len(SKILL_LIST)
