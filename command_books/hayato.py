@@ -11,7 +11,7 @@ from src.common.vkeys import press, key_down, key_up
 # 主要攻击按键
 MAIN_ATTACK_TYPE = 'jump_att'
 # 是否在控制台打印按键信息
-PRINT_PRESS_MSG = True
+PRINT_PRESS_MSG = False
 # 技能冷却时间配置（技能名称 -> 冷却时间秒数）。0 = 无冷却时间（可连续使用）。
 # 使用 Key 属性名称，以便尊重用户的按键绑定。
 SKILL_COOLDOWNS = {
