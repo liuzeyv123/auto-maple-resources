@@ -127,17 +127,18 @@ def step(direction, target):
         d_y = target[1] - config.player_pos[1]
         # 记录移动前的位置
         before_pos = config.player_pos
-        # 当垂直距离大于0.22时，需要使用绳索升降机
-        if abs(d_y) > 0.22:
+        # 当垂直距离大于0.28时，需要使用绳索升降机
+        if abs(d_y) > 0.28:
             time.sleep(0.3)
             # 使用绳索升降机
             press(Key.ROPE_LIFT, 2)
             # 根据距离调整睡眠时间
             time.sleep(1.8 if abs(d_y) > 0.08 else 1)
-        # 当垂直距离小于0.22时执行shift向上位移
+        # 如果垂直距离小于0.28时执行shift向上位移
         else:
-            press(Key.SS, 1, down_time=0.1, up_time=0.1)
-            time.sleep(0.7) 
+            import random
+            press(Key.SS, 1, down_time=random.uniform(0.08, 0.12), up_time=random.uniform(0.08, 0.12))
+            time.sleep(random.uniform(0.65, 0.75)) 
         # 检查Y轴移动是否成功
         after_pos = config.player_pos
         if abs(after_pos[1] - before_pos[1]) < 0.02:
@@ -178,9 +179,15 @@ def step(direction, target):
     #     press(Key.JUMP, 1)
     #     time.sleep(0.5)
     # 左右移动则执行闪现跳跃+主攻攻击
-    press(Key.JUMP, num_presses, down_time=0.05, up_time=0.05)
-    press(Key.MIST_SLASH_IV, 3, down_time=0.05, up_time=0.05)
-    time.sleep(0.2)
+    # 添加轻微随机延迟模拟人类操作
+    if config.stage_fright and utils.bernoulli(0.8):
+        time.sleep(utils.rand_float(0.02, 0.08))
+    press(Key.JUMP, num_presses)
+    time.sleep(utils.rand_float(0.08, 0.12))
+    if config.stage_fright and utils.bernoulli(0.7):
+        time.sleep(utils.rand_float(0.01, 0.05))
+    press(Key.MIST_SLASH_IV, 3, up_time=utils.rand_float(0.03, 0.07))
+    time.sleep(utils.rand_float(0.18, 0.22))
     config.executing_movement = False
 
 
@@ -290,8 +297,9 @@ class Adjust(Command):
                                 time.sleep(2.0 if abs(d_y_distance) > 0.08 else 1)
                             # 当垂直距离小于0.22时执行shift向上位移
                             else:
-                                press(Key.SS, 1, down_time=0.1, up_time=0.1)
-                                time.sleep(0.7)
+                                import random
+                                press(Key.SS, 1, down_time=random.uniform(0.08, 0.12), up_time=random.uniform(0.08, 0.12))
+                                time.sleep(random.uniform(0.65, 0.75))
                             # 更新位置和时间
                             last_position = config.player_pos
                             last_position_time = time.time()
@@ -384,19 +392,20 @@ class FlashJump(Command):
         1. 如果方向是向上，则使用绳索升降机
         2. 否则，按下方向键，执行闪现跳跃，释放方向键
         """
+        import random
         if self.direction == 'up':
             # 使用绳索升降机
             press(Key.ROPE_LIFT, 1)
-            time.sleep(1.5)
+            time.sleep(random.uniform(1.45, 1.55))
             return
         # 按下方向键
         key_down(self.direction)
-        time.sleep(0.1)
+        time.sleep(random.uniform(0.08, 0.12))
         # 执行闪现跳跃（按2次跳跃键）
         press(Key.JUMP, 2)
         # 释放方向键
         key_up(self.direction)
-        time.sleep(0.5)
+        time.sleep(random.uniform(0.45, 0.55))
 
 
 class MistSlashIV(Command):
@@ -431,24 +440,28 @@ class MistSlashIV(Command):
         7. 根据攻击次数添加不同的延迟以确保攻击完成
         """
         # 短暂延迟，确保操作流畅
-        time.sleep(0.05)
+        if config.stage_fright and utils.bernoulli(0.7):
+            time.sleep(utils.rand_float(0.01, 0.06))
         # 按下方向键
         key_down(self.direction)
         # 短暂延迟
-        time.sleep(0.05)
+        time.sleep(utils.rand_float(0.03, 0.07))
         # 如果启用了stage_fright且有70%的概率，添加随机延迟以模拟人类操作
         if config.stage_fright and utils.bernoulli(0.7):
-            time.sleep(utils.rand_float(0.1, 0.3))
+            time.sleep(utils.rand_float(0.08, 0.12))
         # 按照指定的重复次数执行攻击
         for _ in range(self.repetitions):
-            press(Key.MIST_SLASH_IV, self.attacks, up_time=0.05)
+            # 每次攻击间隔添加轻微随机性
+            if config.stage_fright and utils.bernoulli(0.6):
+                time.sleep(utils.rand_float(0.01, 0.04))
+            press(Key.MIST_SLASH_IV, self.attacks, up_time=utils.rand_float(0.03, 0.07))
         # 释放方向键
         key_up(self.direction)
-        # 根据攻击次数添加不同的延迟以确保攻击完成
+        # 根据攻击次数添加不同的延迟以确保攻击完成，并添加轻微随机性
         if self.attacks > 2:
-            time.sleep(0.3)
+            time.sleep(utils.rand_float(0.28, 0.32))
         else:
-            time.sleep(0.2)
+            time.sleep(utils.rand_float(0.18, 0.22))
 
 
 class LightCutter(Command):
@@ -460,10 +473,12 @@ class LightCutter(Command):
         self.repeat = int(repeat)
 
     def main(self):
+        import random
         for _ in range(self.repeat):
             if self.direction in ['left', 'right']:
                 key_down(self.direction)
-            press(Key.LIGHT_CUTTER, 1, up_time=0.05)
+                time.sleep(random.uniform(0.01, 0.05))
+            press(Key.LIGHT_CUTTER, 1, up_time=random.uniform(0.04, 0.06))
             if self.direction in ['left', 'right']:
                 key_up(self.direction)
 
@@ -472,80 +487,91 @@ class CrossingDraw(Command):
     """使用Crossing Draw一次（20秒冷却）。"""
 
     def main(self):
-        press(Key.CROSSING_DRAW, 3)
+        import random
+        press(Key.CROSSING_DRAW, 3, up_time=random.uniform(0.05, 0.08))
 
 
 class CrashingTide(Command):
     """使用Crashing Tide一次（60秒冷却）。"""
 
     def main(self):
-        press(Key.CRASHING_TIDE, 3)
+        import random
+        press(Key.CRASHING_TIDE, 3, up_time=random.uniform(0.05, 0.08))
 
 
 class DarkMoonCut(Command):
     """使用Dark Moon Cut一次（20秒冷却）。"""
 
     def main(self):
-        press(Key.DARK_MOON_CUT, 3)
-        time.sleep(1.5)
+        import random
+        press(Key.DARK_MOON_CUT, 3, up_time=random.uniform(0.05, 0.08))
+        time.sleep(random.uniform(1.4, 1.6))
 
 
 class WailingHeavens(Command):
     """使用Wailing Heavens一次（120秒冷却）。"""
 
     def main(self):
-        press(Key.WAILING_HEAVENS, 3)
-        time.sleep(1.5)
+        import random
+        press(Key.WAILING_HEAVENS, 3, up_time=random.uniform(0.05, 0.08))
+        time.sleep(random.uniform(1.4, 1.6))
 
 
 class SilentArc(Command):
     """使用Silent Arc一次（20秒冷却）。"""
 
     def main(self):
-        press(Key.SILENT_ARC, 3)
-        time.sleep(0.5)
+        import random
+        press(Key.SILENT_ARC, 3, up_time=random.uniform(0.05, 0.08))
+        time.sleep(random.uniform(0.45, 0.55))
 
 
 class FullMoonRage(Command):
     """使用Full Moon Rage一次（60秒冷却）。"""
 
     def main(self):
-        press(Key.FULL_MOON_RAGE, 3)
-        time.sleep(1.5)
+        import random
+        press(Key.FULL_MOON_RAGE, 3, up_time=random.uniform(0.05, 0.08))
+        time.sleep(random.uniform(1.4, 1.6))
 
 
 class ErdaShower(Command):
     """使用Erda Shower一次（60秒冷却，共享）。"""
 
     def main(self):
-        press(Key.ERDA_SHOWER, 3)
+        import random
+        press(Key.ERDA_SHOWER, 3, up_time=random.uniform(0.05, 0.08))
 
 
 class TrueArachnidReflection(Command):
     """使用True Arachnid Reflection一次（250秒冷却，共享）。"""
 
     def main(self):
-        press(Key.TRUE_ARACHNID_REFLECTION, 3)
+        import random
+        press(Key.TRUE_ARACHNID_REFLECTION, 3, up_time=random.uniform(0.05, 0.08))
 
 class SS(Command):
     """使用SS向上位移一次。"""
 
     def main(self):
-        press(Key.SS, 2)
+        import random
+        press(Key.SS, 2, up_time=random.uniform(0.08, 0.12))
 
 
 class Origin(Command):
     """使用Origin（6th职业技能）一次。"""
 
     def main(self):
-        press(Key.ORIGIN, 3)
+        import random
+        press(Key.ORIGIN, 3, up_time=random.uniform(0.05, 0.08))
 
 
 class Ascent(Command):
     """使用Ascent（6th职业技能）一次。"""
 
     def main(self):
-        press(Key.ASCENT, 3)
+        import random
+        press(Key.ASCENT, 3, up_time=random.uniform(0.05, 0.08))
 class GRAZING_CUT(Command):
     """使用Grazing Cut（shift位移）一次。支持上下左右四个方向。"""
 
@@ -558,76 +584,22 @@ class GRAZING_CUT(Command):
             raise ValueError(f"无效的方向: {direction}，必须是 left, right, up 或 down")
 
     def main(self):
+        import random
         for _ in range(self.repeat):
             # 按住方向键
             if self.direction in ['left', 'right', 'up', 'down']:
                 key_down(self.direction)
+                time.sleep(random.uniform(0.01, 0.05))
             # 按下技能键
-            press(Key.GRAZING_CUT, 1, down_time=0.05, up_time=0.05)
+            press(Key.GRAZING_CUT, 1, down_time=random.uniform(0.03, 0.07), up_time=random.uniform(0.03, 0.07))
             # 释放方向键
             if self.direction in ['left', 'right', 'up', 'down']:
                 key_up(self.direction)
 
 
-class SkillList(Command):
-    """按顺序释放技能列表中的技能。"""
-
-    def __init__(self):
-        """
-        初始化SkillList命令。
-        :param skills: 技能列表，包含技能名称的字符串列表
-        """
-        super().__init__(locals())
-        global SKILL_LIST, skill_list_index
-        
-        # 重置技能列表索引
-        skill_list_index = 0
+class Key_Jump(Command):
+    """使用Jump（c）一次。"""
 
     def main(self):
-        """
-        执行技能列表中的下一个技能。
-        """
-        global SKILL_LIST, skill_list_index
-        
-        if not SKILL_LIST:
-            print("技能列表为空")
-            return
-        
-        # 获取当前技能
-        current_skill = SKILL_LIST[skill_list_index]
-        print(f"释放技能: {current_skill}")
-        
-        # 执行技能
-        if current_skill == 'MIST_SLASH_IV':
-            press(Key.MIST_SLASH_IV, 3)
-        elif current_skill == 'CROSSING_DRAW':
-            press(Key.CROSSING_DRAW, 3)
-        elif current_skill == 'LIGHT_CUTTER':
-            press(Key.LIGHT_CUTTER, 3)
-        elif current_skill == 'CRASHING_TIDE':
-            press(Key.CRASHING_TIDE, 3)
-        elif current_skill == 'DARK_MOON_CUT':
-            press(Key.DARK_MOON_CUT, 3)
-        elif current_skill == 'WAILING_HEAVENS':
-            press(Key.WAILING_HEAVENS, 3)
-        elif current_skill == 'SILENT_ARC':
-            press(Key.SILENT_ARC, 3)
-        elif current_skill == 'FULL_MOON_RAGE':
-            press(Key.FULL_MOON_RAGE, 3)
-        elif current_skill == 'ERDA_SHOWER':
-            press(Key.ERDA_SHOWER, 3)
-        elif current_skill == 'BUFF':
-            press(Key.BUFF, 3)
-        elif current_skill == 'ORIGIN':
-            press(Key.ORIGIN, 3)
-        elif current_skill == 'ASCENT':
-            press(Key.ASCENT, 3)
-        elif current_skill == 'TRUE_ARACHNID_REFLECTION':
-            press(Key.TRUE_ARACHNID_REFLECTION, 3)
-        elif current_skill == 'GRAZING_CUT':
-            press(Key.GRAZING_CUT, 3)
-        else:
-            print(f"未知技能: {current_skill}")
-        
-        # 更新技能列表索引
-        skill_list_index = (skill_list_index + 1) % len(SKILL_LIST)
+        press(Key.JUMP, 1)
+
