@@ -1,6 +1,5 @@
-*, x=0.780, y=0.778, frequency=1, skip=False, adjust=False
-    SkillRotation, duration=3
-*, x=0.469, y=0.556, frequency=1, skip=False, adjust=False
-    SkillRotation, duration=4
-*, x=0.283, y=0.778, frequency=1, skip=False, adjust=False
-    SkillRotation, duration=3
+*, x=0.503, y=0.449, frequency=1, skip=False, adjust=True
+    IdleSkillRotation, duration=55
+*, x=0.275, y=0.449, frequency=1, skip=False, adjust=True
+    °®¶û´ï·ÅÖÃ
+    Wait, duration=0.5
