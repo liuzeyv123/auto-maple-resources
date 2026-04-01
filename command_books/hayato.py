@@ -16,7 +16,6 @@ PRINT_PRESS_MSG = False
 # 使用 Key 属性名称，以便尊重用户的按键绑定。
 SKILL_COOLDOWNS = {
     'MIST_SLASH_IV': 0,
-    'CROSSING_DRAW': 21,
     'LIGHT_CUTTER': 11,
     'CRASHING_TIDE': 61,
     'DARK_MOON_CUT': 21,
@@ -46,7 +45,6 @@ class Key:
 
     # Hayato 特有技能
     MIST_SLASH_IV = 'x'              # 主要攻击，无冷却时间
-    CROSSING_DRAW = 'q'  # 20秒冷却
     LIGHT_CUTTER = 'd'                  # 移动技能，假10秒冷却以避免 spam
     CRASHING_TIDE = 'f'                   # 60秒冷却
     DARK_MOON_CUT = 's'            # 20秒冷却
@@ -56,7 +54,7 @@ class Key:
     BUFF = '2'                      #一键爆发BUFF，120冷却
     
     # 6th 职业技能
-    ORIGIN = '7'
+    ORIGIN = 'q'
     ASCENT = '8'
 
 # 技能列表配置
@@ -481,14 +479,6 @@ class LightCutter(Command):
             press(Key.LIGHT_CUTTER, 1, up_time=random.uniform(0.04, 0.06))
             if self.direction in ['left', 'right']:
                 key_up(self.direction)
-
-
-class CrossingDraw(Command):
-    """使用Crossing Draw一次（20秒冷却）。"""
-
-    def main(self):
-        import random
-        press(Key.CROSSING_DRAW, 3, up_time=random.uniform(0.05, 0.08))
 
 
 class CrashingTide(Command):

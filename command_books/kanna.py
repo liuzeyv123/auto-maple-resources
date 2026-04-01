@@ -22,13 +22,13 @@ up_move_fail_count = 0
 
 SKILL_COOLDOWNS = {
     '主攻': 0,
-    '感应_鬼1': 12,
-    '感应_鬼2': 30,
-    '感应_鸦1': 30,
-    '感应_蛇1': 30,
-    '大符咒': 30,
-    'V_鸦': 120,
-    'V_蛇': 120,
+    '感应_鬼1': 13,
+    '感应_鬼2': 31,
+    '感应_鸦1': 31,
+    '感应_蛇1': 31,
+    '大符咒': 31,
+    'V_鸦': 121,
+    'V_蛇': 121,
 }
 
 # 技能轮换黑名单，这些技能不会被加入技能轮换模式
@@ -463,35 +463,35 @@ class 感应_鬼1(Command):
     """Uses 感应_鬼1 once (12 sec cd)."""
 
     def main(self):
-        press(Key.感应_鬼1, 2, up_time=0.05)
+        press(Key.感应_鬼1, 3, up_time=0.05)
 
 
 class 感应_鬼2(Command):
     """Uses 感应_鬼2 once (30 sec cd)."""
 
     def main(self):
-        press(Key.感应_鬼2, 2, up_time=0.05)
+        press(Key.感应_鬼2, 3, up_time=0.05)
 
 
 class 感应_鸦1(Command):
     """Uses 感应_鸦1 once (30 sec cd)."""
 
     def main(self):
-        press(Key.感应_鸦1, 2, up_time=0.05)
+        press(Key.感应_鸦1, 3, up_time=0.05)
 
 
 class 感应_蛇1(Command):
     """Uses 感应_蛇1 once (30 sec cd)."""
 
     def main(self):
-        press(Key.感应_蛇1, 2, up_time=0.05)
+        press(Key.感应_蛇1, 3, up_time=0.05)
 
 
 class 大符咒(Command):
     """Uses 大符咒 once (30 sec cd)."""
 
     def main(self):
-        press(Key.大符咒, 2, up_time=0.05)
+        press(Key.大符咒, 3, up_time=0.05)
 
 
 class V_鸦(Command):
