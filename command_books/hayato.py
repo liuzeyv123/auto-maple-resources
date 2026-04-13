@@ -24,9 +24,10 @@ SKILL_COOLDOWNS = {
     'FULL_MOON_RAGE': 61,
     'ERDA_SHOWER': 61,
     'BUFF': 121,
+    'SOL_GANUS': 61,
 }
 
-SKILL_ROTATION_BLACKLIST = ['CROSSING_DRAW','DARK_MOON_CUT','SILENT_ARC','LIGHT_CUTTER']
+SKILL_ROTATION_BLACKLIST = ['SILENT_ARC','CROSSING_DRAW','LIGHT_CUTTER','SOL_GANUS','ERDA_SHOWER','DARK_MOON_CUT']
 # 按键映射列表
 class Key:
     # 移动
@@ -40,8 +41,8 @@ class Key:
     AUTO_BUFF_LIST = '3'
 
     # 共享技能（所有职业）
-    ERDA_SHOWER = '5'        # 60秒
-    TRUE_ARACHNID_REFLECTION = '6'   # 250秒
+    ERDA_SHOWER = '4'        # 60秒
+    SOL_GANUS = '6'   # 60秒
 
     # Hayato 特有技能
     MIST_SLASH_IV = 'x'              # 主要攻击，无冷却时间
@@ -57,10 +58,6 @@ class Key:
     ORIGIN = 'q'
     ASCENT = '8'
 
-# 技能列表配置
-SKILL_LIST = ['CROSSING_DRAW','DARK_MOON_CUT','SILENT_ARC']
-# 技能列表当前索引
-skill_list_index = 0
 
 # 向下跳跃计数器和之前X轴移动方向
 down_jump_count = 0
@@ -125,14 +122,14 @@ def step(direction, target):
         d_y = target[1] - config.player_pos[1]
         # 记录移动前的位置
         before_pos = config.player_pos
-        # 当垂直距离大于0.28时，需要使用绳索升降机
-        if abs(d_y) > 0.28:
+        # 当垂直距离大于0.35时，需要使用绳索升降机
+        if abs(d_y) > 0.35:
             time.sleep(0.3)
             # 使用绳索升降机
             press(Key.ROPE_LIFT, 2)
             # 根据距离调整睡眠时间
             time.sleep(1.8 if abs(d_y) > 0.08 else 1)
-        # 如果垂直距离小于0.28时执行shift向上位移
+        # 如果垂直距离小于0.35时执行SS向上位移
         else:
             import random
             press(Key.SS, 1, down_time=random.uniform(0.08, 0.12), up_time=random.uniform(0.08, 0.12))
@@ -152,7 +149,7 @@ def step(direction, target):
                 key_down(random_direction)
                 time.sleep(0.1)
                 press(Key.JUMP, 2)
-                key_up(previous_x_direction)
+                key_up(random_direction)
                 time.sleep(0.2)
                 # 重置失败计数器
                 up_move_fail_count = 0
@@ -276,99 +273,74 @@ class Adjust(Command):
                     y_fail_count = 0  # 重置Y轴失败次数
             else:
                 # 调整Y方向
-                # 只有在未执行X轴移动时才进行Y轴调整，避免左右跳跃时按下down键
-                if not x_moved:
-                    d_y = self.target[1] - config.player_pos[1]  # Y方向误差
+                d_y = self.target[1] - config.player_pos[1]  # Y方向误差
 
-                    if abs(d_y) > settings.adjust_tolerance / math.sqrt(2):  # 如果Y方向误差超过阈值
-                        if d_y < 0:  # 需要向上移动
-                            # 计算目标与当前位置的垂直距离
-                            d_y_distance = self.target[1] - config.player_pos[1]
-                            # 记录移动前的位置
-                            before_pos = config.player_pos
-                            # 当垂直距离大于0.22时，需要使用绳索升降机
-                            if abs(d_y_distance) > 0.22:
-                                time.sleep(0.3)
-                                # 使用绳索升降机
-                                press(Key.ROPE_LIFT, 2)
-                                # 根据距离调整睡眠时间
-                                time.sleep(2.0 if abs(d_y_distance) > 0.08 else 1)
-                            # 当垂直距离小于0.22时执行shift向上位移
-                            else:
-                                import random
-                                press(Key.SS, 1, down_time=random.uniform(0.08, 0.12), up_time=random.uniform(0.08, 0.12))
-                                time.sleep(random.uniform(0.65, 0.75))
-                            # 更新位置和时间
-                            last_position = config.player_pos
-                            last_position_time = time.time()
-                        else:  # 需要向下移动
-                            print('adjust的向下跳跃2次')
-                            key_down('down')  # 按下下方向键
-                            time.sleep(0.1)  # 短暂延迟
-                            press(Key.JUMP, 2, down_time=0.1)  # 按跳跃键
-                            key_up('down')  # 释放下方向键
-                            time.sleep(1)  # 短暂延迟
-                            # 更新位置和时间
-                            last_position = config.player_pos
-                            last_position_time = time.time()
-
-                        counter -= 1  # 减少剩余调整步数
-
-                        # 检查Y轴调整是否成功
-                        new_error = utils.distance(config.player_pos, self.target)
-                        if new_error >= error:  # 如果误差没有减小，认为调整失败
-                            y_fail_count += 1
+                if abs(d_y) > settings.adjust_tolerance / math.sqrt(2):  # 如果Y方向误差超过阈值
+                    if d_y < 0:  # 需要向上移动
+                        # 计算目标与当前位置的垂直距离
+                        d_y_distance = self.target[1] - config.player_pos[1]
+                        # 记录移动前的位置
+                        before_pos = config.player_pos
+                        # 当垂直距离大于0.22时，需要使用绳索升降机
+                        if abs(d_y_distance) > 0.22:
+                            time.sleep(0.3)
+                            # 使用绳索升降机
+                            press(Key.ROPE_LIFT, 2)
+                            # 根据距离调整睡眠时间
+                            time.sleep(2.0 if abs(d_y_distance) > 0.08 else 1)
+                        # 当垂直距离小于0.22时执行shift向上位移
                         else:
-                            y_fail_count = 0  # 重置失败次数
+                            import random
+                            press(Key.SS, 1, down_time=random.uniform(0.08, 0.12), up_time=random.uniform(0.08, 0.12))
+                            time.sleep(random.uniform(0.65, 0.75))
+                        # 更新位置和时间
+                        last_position = config.player_pos
+                        last_position_time = time.time()
+                    else:  # 需要向下移动
+                        print('adjust的向下跳跃2次')
+                        key_down('down')  # 按下下方向键
+                        time.sleep(0.1)  # 短暂延迟
+                        press(Key.JUMP, 2, down_time=0.1)  # 按跳跃键
+                        key_up('down')  # 释放下方向键
+                        time.sleep(1)  # 短暂延迟
+                        # 更新位置和时间
+                        last_position = config.player_pos
+                        last_position_time = time.time()
 
-                        # 当Y轴调整失败次数大于2时，向之前的X轴移动方向继续移动一个move_tolerance
-                        if y_fail_count > 2 and last_x_direction:
-                            print(f"Y轴调整失败次数过多({y_fail_count}次)，向{last_x_direction}方向移动0.5个move_tolerance")
+                    counter -= 1  # 减少剩余调整步数
 
-                            # 计算需要移动的距离（0.5个move_tolerance）
-                            move_distance = settings.move_tolerance * 0.5
-
-                            # 向之前的X轴移动方向移动
-                            key_down(last_x_direction)
-                            time.sleep(0.2)  # 移动一段时间
-                            key_up(last_x_direction)
-                            time.sleep(0.1)  # 等待移动完成
-                            # 更新位置和时间
-                            last_position = config.player_pos
-                            last_position_time = time.time()
-
-                            # 重置失败次数
-                            y_fail_count = 0
+                    # 检查Y轴调整是否成功
+                    new_error = utils.distance(config.player_pos, self.target)
+                    if new_error >= error:  # 如果误差没有减小，认为调整失败
+                        y_fail_count += 1
                     else:
                         y_fail_count = 0  # 重置失败次数
+
+                    # 当Y轴调整失败次数大于2时，向之前的X轴移动方向继续移动一个move_tolerance
+                    if y_fail_count > 2 and last_x_direction:
+                        print(f"Y轴调整失败次数过多({y_fail_count}次)，向{last_x_direction}方向移动0.5个move_tolerance")
+
+                        # 计算需要移动的距离（0.5个move_tolerance）
+                        move_distance = settings.move_tolerance * 0.5
+
+                        # 向之前的X轴移动方向移动
+                        key_down(last_x_direction)
+                        time.sleep(0.2)  # 移动一段时间
+                        key_up(last_x_direction)
+                        time.sleep(0.1)  # 等待移动完成
+                        # 更新位置和时间
+                        last_position = config.player_pos
+                        last_position_time = time.time()
+
+                        # 重置失败次数
+                        y_fail_count = 0
                 else:
-                    # 如果本轮已执行X轴移动，跳过Y轴调整
-                    print("本轮已执行X轴移动，跳过Y轴调整以避免意外按下down键")
-                    x_moved = False  # 重置标记
+                    y_fail_count = 0  # 重置失败次数
 
             error = utils.distance(config.player_pos, self.target)  # 更新当前误差
             toggle = not toggle  # 切换调整方向
 
         config.executing_movement = False
-
-class Buff(Command):
-    """Decent skills (F1–F4) on 3 min rotation."""
-
-    def __init__(self):
-        super().__init__(locals())
-        self.decent_buff_time = 0
-
-    def main(self):
-        decent_buffs = [
-            Key.AUTO_BUFF_LIST,
-        ]
-        DECENT_CD = 180  # 3 min
-        now = time.time()
-        if self.decent_buff_time == 0 or now - self.decent_buff_time > DECENT_CD:
-            for key in decent_buffs:
-                press(key, 3, up_time=0.3)
-            self.decent_buff_time = now
-
 
 class FlashJump(Command):
     """执行闪现跳跃到指定方向（使用JUMP键，按2次）。向上方向：仅使用绳索升降机。"""
@@ -533,12 +505,12 @@ class ErdaShower(Command):
         press(Key.ERDA_SHOWER, 3, up_time=random.uniform(0.05, 0.08))
 
 
-class TrueArachnidReflection(Command):
-    """使用True Arachnid Reflection一次（250秒冷却，共享）。"""
+class Sol_ganus(Command):
+    """使用Sol_ganus一次（250秒冷却，共享）。"""
 
     def main(self):
         import random
-        press(Key.TRUE_ARACHNID_REFLECTION, 3, up_time=random.uniform(0.05, 0.08))
+        press(Key.SOL_GANUS, 3, up_time=random.uniform(0.05, 0.08))
 
 class SS(Command):
     """使用SS向上位移一次。"""
@@ -546,6 +518,7 @@ class SS(Command):
     def main(self):
         import random
         press(Key.SS, 2, up_time=random.uniform(0.08, 0.12))
+        time.sleep(random.uniform(0.45, 0.55))
 
 
 class Origin(Command):
@@ -592,4 +565,94 @@ class Key_Jump(Command):
 
     def main(self):
         press(Key.JUMP, 1)
+
+
+class Buff(Command):
+    """使用Buff技能。"""
+
+    def __init__(self):
+        super().__init__(locals())
+        # 技能配置：(技能按键, CD时间)
+        self.buff_config = {
+            Key.BUFF: 120,
+            Key.AUTO_BUFF_LIST: 180,
+        }
+        # 记录每个技能的上次使用时间
+        self.buff_times = {key: 0 for key in self.buff_config.keys()}
+
+    def main(self):
+        now = time.time()
+        for skill_key, cd in self.buff_config.items():
+            last_time = self.buff_times[skill_key]
+            if last_time == 0 or now - last_time > cd:
+                press(skill_key, 3, up_time=0.3)
+                self.buff_times[skill_key] = now
+
+
+class IdleSkillRotation(Command):
+    """站在原地随机释放技能（不进行主攻），若技能都在cd或不符合依赖则在原地等待。"""
+
+    def __init__(self, duration):
+        super().__init__(locals())
+        self.duration = settings.validate_nonnegative_int(duration)
+        # 技能配置：(技能ID, 技能按键, CD时间)
+        self.skill_config = [
+            ('CRASHING_TIDE', Key.CRASHING_TIDE, 61),
+            ('DARK_MOON_CUT', Key.DARK_MOON_CUT, 21),
+            ('WAILING_HEAVENS', Key.WAILING_HEAVENS, 121),
+            ('SILENT_ARC', Key.SILENT_ARC, 21),
+            ('FULL_MOON_RAGE', Key.FULL_MOON_RAGE, 61),
+        ]
+
+    def main(self):
+        import random
+        import src.common.config as config
+        from src.routine.cooldown_tracker import CooldownTracker
+        start_time = time.time()
+        end_time = start_time + self.duration
+
+        while config.enabled and time.time() < end_time:
+            # 1. 手动调用buff.main()，确保在IdleSkillRotation期间也能自动补buff
+            try:
+                if hasattr(config.bot, 'command_book') and hasattr(config.bot.command_book, 'buff'):
+                    config.bot.command_book.buff.main()
+            except Exception as e:
+                print(f'[!] IdleSkillRotation调用buff失败: {e}')
+
+            # 2. 获取或创建冷却追踪器（与移动中的技能共享）
+            module = getattr(config.bot.command_book, 'module', None) if getattr(config.bot, 'command_book', None) else None
+            cooldowns = getattr(module, 'SKILL_COOLDOWNS', None) if module else None
+            if cooldowns is None:
+                time.sleep(0.5)
+                continue
+
+            tracker = getattr(config.bot, 'cooldown_tracker', None)
+            if tracker is None or getattr(tracker, '_cooldowns_ref', None) is not cooldowns:
+                tracker = CooldownTracker(cooldowns)
+                tracker._cooldowns_ref = cooldowns
+                setattr(config.bot, 'cooldown_tracker', tracker)
+
+            # 获取所有冷却完毕的技能
+            available_from_tracker = tracker.get_available()
+
+            # 3. 收集所有可用的技能
+            available_skills = []
+            for skill_id, skill_key, cd in self.skill_config:
+                # 检查冷却时间（使用CooldownTracker）
+                if skill_id in available_from_tracker:
+                    available_skills.append(skill_key)
+
+            # 4. 随机选择一个可用技能释放
+            if available_skills:
+                selected_skill = random.choice(available_skills)
+                press(selected_skill, 2, up_time=0.05)
+                # 记录技能使用时间（更新CooldownTracker）
+                for skill_id, skill_key, cd in self.skill_config:
+                    if skill_key == selected_skill:
+                        tracker.record_used(skill_id)
+                        break
+                time.sleep(0.5)
+            else:
+                # 所有技能都在CD中，等待
+                time.sleep(0.5)
 
