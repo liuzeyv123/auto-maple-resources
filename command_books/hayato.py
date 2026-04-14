@@ -38,7 +38,7 @@ class Key:
     PICK_UP = 'z'
 
     # 增益技能
-    AUTO_BUFF_LIST = '3'
+    # AUTO_BUFF_LIST = '3'
 
     # 共享技能（所有职业）
     ERDA_SHOWER = '4'        # 60秒
@@ -52,7 +52,7 @@ class Key:
     WAILING_HEAVENS = 'r'                  # 120秒冷却
     SILENT_ARC = 'ctrl'                  # 20秒冷却
     FULL_MOON_RAGE = 'e'                  # 60秒冷却
-    BUFF = '2'                      #一键爆发BUFF，120冷却
+    BUFF = '3'                      #一键爆发BUFF，120冷却
     
     # 6th 职业技能
     ORIGIN = 'q'
@@ -575,7 +575,7 @@ class Buff(Command):
         # 技能配置：(技能按键, CD时间)
         self.buff_config = {
             Key.BUFF: 120,
-            Key.AUTO_BUFF_LIST: 180,
+            # Key.AUTO_BUFF_LIST: 180,
         }
         # 记录每个技能的上次使用时间
         self.buff_times = {key: 0 for key in self.buff_config.keys()}

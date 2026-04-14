@@ -559,9 +559,16 @@ class IdleSkillRotation(Command):
         from src.routine.cooldown_tracker import CooldownTracker
         start_time = time.time()
         end_time = start_time + self.duration
+        last_move_time = start_time
 
         while config.enabled and time.time() < end_time:
             now = time.time()
+
+            # 每20秒左右移动一次（左0.3s，右0.3s）
+            if now - last_move_time >= 20:
+                press("left", 1, down_time=0.3)
+                press("right", 1, down_time=0.3)
+                last_move_time = now
 
             # 1. 手动调用buff.main()，确保在IdleSkillRotation期间也能自动补buff
             try:
