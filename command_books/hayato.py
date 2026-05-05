@@ -27,7 +27,7 @@ SKILL_COOLDOWNS = {
     'SOL_GANUS': 61,
 }
 
-SKILL_ROTATION_BLACKLIST = ['SILENT_ARC','CROSSING_DRAW','LIGHT_CUTTER','SOL_GANUS','ERDA_SHOWER','DARK_MOON_CUT']
+SKILL_ROTATION_BLACKLIST = ['SILENT_ARC','CROSSING_DRAW','LIGHT_CUTTER','SOL_GANUS','DARK_MOON_CUT']
 # 按键映射列表
 class Key:
     # 移动
@@ -122,14 +122,14 @@ def step(direction, target):
         d_y = target[1] - config.player_pos[1]
         # 记录移动前的位置
         before_pos = config.player_pos
-        # 当垂直距离大于0.35时，需要使用绳索升降机
-        if abs(d_y) > 0.35:
+        # 当垂直距离大于0.39时，需要使用绳索升降机
+        if abs(d_y) > 0.39:
             time.sleep(0.3)
             # 使用绳索升降机
             press(Key.ROPE_LIFT, 2)
             # 根据距离调整睡眠时间
             time.sleep(1.8 if abs(d_y) > 0.08 else 1)
-        # 如果垂直距离小于0.35时执行SS向上位移
+        # 如果垂直距离小于0.39时执行SS向上位移
         else:
             import random
             press(Key.SS, 1, down_time=random.uniform(0.08, 0.12), up_time=random.uniform(0.08, 0.12))
