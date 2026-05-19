@@ -3,6 +3,7 @@
 from src.common import config, settings, utils
 import time
 import math
+import os
 from src.routine.components import Command
 from src.common.vkeys import press, key_down, key_up
 
@@ -65,6 +66,21 @@ previous_x_direction = 'right'  # 默认向右
 # 向上移动失败计数器
 up_move_fail_count = 0
 
+def get_dy_threshold():
+    """获取当前 routine 对应的 d_y 阈值，优先从 GUI 设置读取"""
+    # 优先从 GUI 设置读取（用户可在 Settings 页面配置）
+    try:
+        from src.gui.settings.dy_threshold import DyThresholdSettings
+        gui_settings = DyThresholdSettings('hayato_dy_threshold')
+        if config.routine and config.routine.path:
+            csv_name = os.path.basename(config.routine.path)
+            return gui_settings.get(csv_name)
+        return gui_settings.get('default')
+    except Exception:
+        pass
+    # 回退默认值
+    return 0.39
+
 
 
 #########################
@@ -122,14 +138,15 @@ def step(direction, target):
         d_y = target[1] - config.player_pos[1]
         # 记录移动前的位置
         before_pos = config.player_pos
-        # 当垂直距离大于0.39时，需要使用绳索升降机
-        if abs(d_y) > 0.39:
+        # 当垂直距离大于阈值时，需要使用绳索升降机
+        dy_threshold = get_dy_threshold()
+        if abs(d_y) > dy_threshold:
             time.sleep(0.3)
             # 使用绳索升降机
             press(Key.ROPE_LIFT, 2)
             # 根据距离调整睡眠时间
             time.sleep(1.8 if abs(d_y) > 0.08 else 1)
-        # 如果垂直距离小于0.39时执行SS向上位移
+        # 如果垂直距离小于等于阈值时执行SS向上位移
         else:
             import random
             press(Key.SS, 1, down_time=random.uniform(0.08, 0.12), up_time=random.uniform(0.08, 0.12))
